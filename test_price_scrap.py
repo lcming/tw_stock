@@ -2,13 +2,18 @@
 from price_scrap import price_scrap
 from stock_scrap import stock_scrap
 import unittest
+import datetime
 
 class test_dist_scrap(unittest.TestCase):
     url_base = 'http://www.twse.com.tw/exchangeReport/STOCK_DAY_AVG'
+    datetime
+    fix_year = 2017
+    fix_month = 11
+    fix_day = 30
     def test_format_date(self):
         ps = price_scrap("2303", 30, self.url_base)
         self.assertEqual(ps.format_date("82/05/18"), "19930518")
-        self.assertEqual(len(ps.dates), 2)
+        self.assertEqual(len(ps.request_dates), 2)
 
     def test_format_url(self):
         ps = price_scrap("2303", 3, self.url_base)
@@ -29,6 +34,7 @@ class test_dist_scrap(unittest.TestCase):
         self.assertNotIn("20171001", ps.data)
         self.assertNotIn("2017111", ps.data)
         self.assertNotIn("20171126", ps.data)
+        print(len(ps.record_dates))
 
 
 

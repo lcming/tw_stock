@@ -42,7 +42,7 @@ class price_scrap(stock_scrap):
                     formatted_date = self.format_date(day_info[0])
                     price = self.get_pure_float(day_info[1])
                     self.data[formatted_date] = price
-                    self.record_dates.append(format_date)
+                    self.record_dates.append(formatted_date)
 
     def format_url(self, date):
         _url = self.url + '?response=json&date=' + date + '&stockNo=' + self.stock_id
