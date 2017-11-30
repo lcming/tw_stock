@@ -1,0 +1,62 @@
+#!/usr/bin/python3
+
+from lxml import etree, html
+from retry import retry
+import urllib.request
+import logging
+import pprint
+import re
+import datetime
+from stock_scrap import stock_scrap
+
+class price_scrap(stock_scrap):
+
+    def __init__(self, _stock_id, _trace_len, _url):
+        super().__init__(_stock_id, _trace_len, _url)
+        self.set_dates_list()
+        #self.set_data()
+
+    def set_dates_list(self):
+        days_traced = 0
+        d = self.today
+        while (days_traced <= self.trace_len):
+            self.request_dates.append(self.get_date_string(d))
+            old_d = d
+            while (d.month == old_d.month):
+                d -= datetime.timedelta(15)
+                days_traced += 15
+
+    def format_date(self, date):
+        # from 106/11/11 to 20171111
+        y, m, d = date.split('/')
+        y = int(y) + 1911
+        return str(y) + str(m) + str(d)
+
+    def set_data(self):
+        for date in self.request_dates:
+            a = 1
+            raw_data = eval(self.get_html_str(self.format_url(date)))
+            data_part = raw_data['data']
+            for day_info in data_part:
+                if(re.match('\d+/\d+/\d+', day_info[0])):
+                    formatted_date = self.format_date(day_info[0])
+                    price = self.get_pure_float(day_info[1])
+                    self.data[formatted_date] = price
+                    self.record_dates.append(format_date)
+
+    def format_url(self, date):
+        _url = self.url + '?response=json&date=' + date + '&stockNo=' + self.stock_id
+        #http://www.twse.com.tw/exchangeReport/STOCK_DAY_AVG?response=json&date=20171001&stockNo=2303
+        return _url
+
+    @retry(urllib.error.URLError)
+    def get_html_str(self, url):
+        import time
+        print(url)
+        time.sleep(2)
+        rsp = urllib.request.urlopen(url)
+        return rsp.read()
+
+if __name__ == '__main__':
+    url_base = 'http://www.twse.com.tw/exchangeReport/STOCK_DAY_AVG'
+    ps = price_scrap("2303", 7, url_base)
