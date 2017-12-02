@@ -10,7 +10,8 @@ from stock_scrap import stock_scrap
 class dist_scrap(stock_scrap):
     ranges = []
 
-    def __init__(self, _stock_id, _trace_len, _url):
+    def __init__(self, _stock_id, _trace_len):
+        _url = 'https://www.tdcc.com.tw/smWeb/QryStock.jsp'
         super().__init__(_stock_id, _trace_len, _url)
 
     def set_request_dates_list(self):

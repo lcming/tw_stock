@@ -9,4 +9,6 @@ for testfile in `ls test*.py`
 do
     ./$testfile
 done
-git commit -a -m "$msg"
+if [ "$?" -eq 0 ]; then
+    git commit -a -m "$msg"
+fi

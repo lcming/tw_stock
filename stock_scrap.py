@@ -25,6 +25,10 @@ class stock_scrap:
         d_str = str(0) + str(d.day) if len(str(d.day)) == 1 else str(d.day)
         return "%s%s%s" % (y_str, m_str, d_str)
 
+    def set_today(self, y, m, d):
+        new_date = datetime.date(y, m, d)
+        self.today = new_date
+
     def dbg(self):
         print("Stock: %s, url: %s" % (self.stock_id, self.url))
         print("Request dates include:"),

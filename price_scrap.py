@@ -11,10 +11,9 @@ from stock_scrap import stock_scrap
 
 class price_scrap(stock_scrap):
 
-    def __init__(self, _stock_id, _trace_len, _url):
+    def __init__(self, _stock_id, _trace_len):
+        _url = 'http://www.twse.com.tw/exchangeReport/STOCK_DAY_AVG'
         super().__init__(_stock_id, _trace_len, _url)
-        self.set_dates_list()
-        #self.set_data()
 
     def set_dates_list(self):
         days_traced = 0
@@ -23,8 +22,8 @@ class price_scrap(stock_scrap):
             self.request_dates.append(self.get_date_string(d))
             old_d = d
             while (d.month == old_d.month):
-                d -= datetime.timedelta(15)
-                days_traced += 15
+                d -= datetime.timedelta(1)
+                days_traced += 1
 
     def format_date(self, date):
         # from 106/11/11 to 20171111
@@ -33,6 +32,7 @@ class price_scrap(stock_scrap):
         return str(y) + str(m) + str(d)
 
     def set_data(self):
+        self.set_dates_list()
         for date in self.request_dates:
             a = 1
             raw_data = eval(self.get_html_str(self.format_url(date)))
@@ -58,5 +58,6 @@ class price_scrap(stock_scrap):
         return rsp.read()
 
 if __name__ == '__main__':
-    url_base = 'http://www.twse.com.tw/exchangeReport/STOCK_DAY_AVG'
-    ps = price_scrap("2303", 7, url_base)
+    ps = price_scrap("2303", 14)
+    ps.set_data()
+
