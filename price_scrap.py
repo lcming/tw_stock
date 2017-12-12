@@ -21,6 +21,7 @@ class price_scrap(stock_scrap):
         while (days_traced <= self.trace_len):
             self.request_dates.append(self.get_date_string(d))
             old_d = d
+            # all data of this month will be presented, so trace back to the previous month
             while (d.month == old_d.month):
                 d -= datetime.timedelta(1)
                 days_traced += 1
@@ -34,7 +35,6 @@ class price_scrap(stock_scrap):
     def set_data(self):
         self.set_dates_list()
         for date in self.request_dates:
-            a = 1
             raw_data = eval(self.get_html_str(self.format_url(date)))
             data_part = raw_data['data']
             for day_info in data_part:
