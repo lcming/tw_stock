@@ -15,7 +15,7 @@ class price_scrap(stock_scrap):
         _url = 'http://www.twse.com.tw/exchangeReport/STOCK_DAY_AVG'
         super().__init__(_stock_id, _trace_len, _url)
 
-    def set_dates_list(self):
+    def set_request_dates_list(self):
         days_traced = 0
         d = self.today
         while (days_traced <= self.trace_len):
@@ -33,7 +33,7 @@ class price_scrap(stock_scrap):
         return str(y) + str(m) + str(d)
 
     def set_data(self):
-        self.set_dates_list()
+        self.set_request_dates_list()
         for date in self.request_dates:
             raw_data = eval(self.get_html_str(self.format_url(date)))
             data_part = raw_data['data']

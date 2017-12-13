@@ -16,7 +16,7 @@ class inst_scrap(price_scrap):
         super().__init__(_stock_id, _trace_len)
         self.url = 'http://www.twse.com.tw/fund/T86?response=json&selectType=ALL&'
 
-    def set_dates_list(self):
+    def set_request_dates_list(self):
         days_traced = 0
         d = self.today
         while (days_traced < self.trace_len):
@@ -40,28 +40,26 @@ class inst_scrap(price_scrap):
                 idx += 1
         return idx
 
+    def get_daily_info(self, date):
+        daily_info = {}
+        raw_data = eval(self.get_html_str(self.format_url(date)))
+        if 'data' in raw_data:
+            data_part = raw_data['data']
+            idx = self.get_stock_id_idx(data_part, self.stock_id)
+            for i in range(2, len(self.data_base_key)):
+                key_name = self.data_base_key[i]
+                daily_info[key_name] = self.get_pure_int(data_part[idx][i])
+        else:
+            print("No trade on %s" % date)
+            daily_info = None
+        return daily_info
+
     def set_data(self):
-        self.set_dates_list()
+        self.set_request_dates_list()
         for date in self.request_dates:
-            raw_data = eval(self.get_html_str(self.format_url(date)))
-            if 'data' in raw_data:
+            valid_daily_info = self.get_daily_info(date)
+            if(valid_daily_info):
                 self.record_dates.append(date)
-                data_part = raw_data['data']
-                idx = self.get_stock_id_idx(data_part, self.stock_id)
-                stock_info_today = {}
-                for i in range(2, len(self.data_base_key)):
-                    key_name = self.data_base_key[i]
-                    stock_info_today[key_name] = self.get_pure_int(data_part[idx][i])
-                self.data[date] = stock_info_today
-            else:
-                print("No trade on %s" % date)
-
-
-
-
-
-
-
-
+                self.data[date] = valid_daily_info
 
 
