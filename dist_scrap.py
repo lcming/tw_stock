@@ -1,8 +1,6 @@
 #!/usr/bin/python3
 
 from lxml import etree, html
-from retry import retry
-import urllib.request
 import logging
 import pprint
 from stock_scrap import stock_scrap
@@ -88,11 +86,6 @@ class dist_scrap(stock_scrap):
     def format_url(self, date):
         _url = self.url + '?SCA_DATE=' + date + '&SqlMethod=StockNo&StockNo=' + self.stock_id + '&StockName=&sub=%ACd%B8%DF'
         return _url
-
-    @retry(urllib.error.URLError)
-    def get_html_str(self, url):
-        rsp = urllib.request.urlopen(url)
-        return rsp.read().decode('big5')
 
 if __name__ == '__main__':
     pp = pprint.PrettyPrinter(indent=4)

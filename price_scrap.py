@@ -1,8 +1,6 @@
 #!/usr/bin/python3
 
 from lxml import etree, html
-from retry import retry
-import urllib.request
 import logging
 import pprint
 import re
@@ -48,14 +46,6 @@ class price_scrap(stock_scrap):
         _url = self.url + '?response=json&date=' + date + '&stockNo=' + self.stock_id
         #http://www.twse.com.tw/exchangeReport/STOCK_DAY_AVG?response=json&date=20171001&stockNo=2303
         return _url
-
-    @retry(urllib.error.URLError)
-    def get_html_str(self, url):
-        import time
-        print(url)
-        time.sleep(2)
-        rsp = urllib.request.urlopen(url)
-        return rsp.read()
 
 if __name__ == '__main__':
     ps = price_scrap("2303", 14)

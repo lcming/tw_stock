@@ -38,7 +38,5 @@ class test_dist_scrap(unittest.TestCase):
         self.assertNotIn("20171126", ps.data)
         self.assertNotIn("20170929", ps.data)
 
-
-
 if __name__ == '__main__':
     unittest.main()
