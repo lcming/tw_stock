@@ -21,6 +21,10 @@ class test_stock_scrap(unittest.TestCase):
         ex_path = './cache/http/www.twse.com.tw/exchangeReport/STOCK_DAY_AVG?response=json&date=20171001&stockNo=2303'
         self.assertEqual(ss.url_to_cache_path(ex_url), ex_path)
 
+    def test_pure(self):
+        ss = stock_scrap("3035", 21, "")
+        self.assertEqual(ss.get_pure_int(" 321, 21.000"), 32121)
+        self.assertEqual(ss.get_pure_float(" 321, 21.0001"), float(32121.0001))
 
 if __name__ == '__main__':
     unittest.main()

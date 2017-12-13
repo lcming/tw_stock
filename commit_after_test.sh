@@ -5,11 +5,18 @@ if [ "$#" -ne 1 ]; then
 fi
 msg=$1
 echo $msg
+fail_tests=""
 for testfile in `ls test*.py`
 do
     ./$testfile
+    if [ "$?" -ne 0 ]; then
+        fail_tests=$(printf "$fail_tests\n$testfile")
+    fi
 done
-if [ "$?" -eq 0 ]; then
+
+if [ "$fail_tests" = "" ]; then
     git commit -a -m "$msg"
     git push
+else
+    echo "failed tests: $fail_tests"
 fi

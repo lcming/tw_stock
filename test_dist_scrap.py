@@ -6,11 +6,6 @@ import unittest
 
 class test_dist_scrap(unittest.TestCase):
 
-    def test_pure(self):
-        ss = stock_scrap("3035", 21, "")
-        self.assertEqual(ss.get_pure_int(" 321, 21.000"), 32121)
-        self.assertEqual(ss.get_pure_float(" 321, 21.0001"), float(32121.0001))
-
     def test_dist_scrap(self):
         ds = dist_scrap("3035", 21)
         ds.set_today(2017, 11, 30)
