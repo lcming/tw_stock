@@ -11,4 +11,5 @@ do
 done
 if [ "$?" -eq 0 ]; then
     git commit -a -m "$msg"
+    git push
 fi

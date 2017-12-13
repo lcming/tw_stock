@@ -93,8 +93,6 @@ class stock_scrap:
             except UnicodeDecodeError:
                 rsp = urllib.request.urlopen(url)
                 html_str = rsp.read().decode('big5')
-                print(html_str)
-
             self.write_cache_data(html_str, url)
         return html_str
 
