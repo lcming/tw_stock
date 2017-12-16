@@ -25,7 +25,7 @@ class test_inst_scrap(unittest.TestCase):
         self.assertEqual(inss.get_stock_id_idx(data_part, "00637L"), 8886)
 
     def test_set_data(self):
-        inss = inst_scrap("3035", 31)
+        inss = inst_scrap("3035", 23)
         inss.set_today(2017, 11, 30)
         inss.set_data()
         self.assertEqual(inss.data["20171031"]['foreign_buy'], 671000)

@@ -16,15 +16,6 @@ class inst_scrap(price_scrap):
         super().__init__(_stock_id, _trace_len)
         self.url = 'http://www.twse.com.tw/fund/T86?response=json&selectType=ALL&'
 
-    def set_request_dates_list(self):
-        days_traced = 0
-        d = self.today
-        while (days_traced < self.trace_len):
-            self.request_dates.append(self.get_date_string(d))
-            d -= datetime.timedelta(1)
-            days_traced += 1
-
-
     def format_url(self, date):
         _url = self.url + "date=" + date
         return _url
@@ -55,11 +46,15 @@ class inst_scrap(price_scrap):
         return daily_info
 
     def set_data(self):
-        self.set_request_dates_list()
-        for date in self.request_dates:
+        d = self.today
+        days_traced = 0
+        while (days_traced < self.trace_len):
+            date = self.get_date_string(d)
             valid_daily_info = self.get_daily_info(date)
             if(valid_daily_info):
                 self.record_dates.append(date)
                 self.data[date] = valid_daily_info
+                days_traced += 1
+            d -= datetime.timedelta(1)
 
 

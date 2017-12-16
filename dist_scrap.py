@@ -3,6 +3,7 @@
 from lxml import etree, html
 import logging
 import pprint
+import datetime
 from stock_scrap import stock_scrap
 
 class dist_scrap(stock_scrap):
@@ -11,20 +12,6 @@ class dist_scrap(stock_scrap):
     def __init__(self, _stock_id, _trace_len):
         _url = 'https://www.tdcc.com.tw/smWeb/QryStock.jsp'
         super().__init__(_stock_id, _trace_len, _url)
-
-    def set_request_dates_list(self):
-        import datetime
-        days_traced = 0
-        release_day = 4
-        d = self.today
-        while (d.weekday() != release_day):
-            d -= datetime.timedelta(1)
-        while (days_traced < self.trace_len):
-            self.request_dates.append(self.get_date_string(d))
-            d -= datetime.timedelta(7)
-            days_traced += 7
-
-
 
     def get_min_max(self, share_range):
         import re
@@ -64,12 +51,17 @@ class dist_scrap(stock_scrap):
         return daily_info
 
     def set_data(self):
-        self.set_request_dates_list()
-        for date in self.request_dates:
+        days_traced = 0
+        d = self.today
+        while (days_traced < self.trace_len):
+            date = self.get_date_string(d)
             valid_daily_info = self.get_daily_info(date)
             if(valid_daily_info):
                 self.record_dates.append(date)
                 self.data[date] = valid_daily_info
+                days_traced += 1
+                print("set %s" % date)
+            d -= datetime.timedelta(1)
         if(len(self.record_dates) > 0):
             self.set_range()
 

@@ -9,11 +9,9 @@ class test_dist_scrap(unittest.TestCase):
     fix_month = 11
     fix_day = 30
     def test_format_date(self):
-        ps = price_scrap("2303", 30)
+        ps = price_scrap("2303", 31)
         ps.set_today(2017, 11, 30)
-        ps.set_data()
         self.assertEqual(ps.format_date("82/05/18"), "19930518")
-        self.assertEqual(len(ps.request_dates), 2)
 
     def test_format_url(self):
         ps = price_scrap("2303", 3)
@@ -23,20 +21,21 @@ class test_dist_scrap(unittest.TestCase):
 
 
     def test_set_data(self):
-        ps = price_scrap("3035", 30)
+        ps = price_scrap("3035", 22)
         ps.set_today(2017, 11, 30)
         ps.set_data()
-        self.assertEqual(ps.data["20171031"], 46.35)
+        self.assertEqual(len(ps.data), 22)
         self.assertEqual(ps.data["20171127"], 58.4)
         self.assertEqual(ps.data["20171128"], 57.3)
         self.assertEqual(ps.data["20171129"], 63)
         self.assertIn("20171101", ps.data)
-        self.assertIn("20171002", ps.data)
         self.assertNotIn("20171001", ps.data)
-        self.assertNotIn("2017111", ps.data)
-        self.assertNotIn("20171126", ps.data)
-        self.assertNotIn("20171126", ps.data)
-        self.assertNotIn("20170929", ps.data)
+
+    def test_set_data_more_than_we_want(self):
+        ps = price_scrap("3035", 23)
+        ps.set_today(2017, 11, 30)
+        ps.set_data()
+        self.assertEqual(len(ps.data), 41)
 
 if __name__ == '__main__':
     unittest.main()

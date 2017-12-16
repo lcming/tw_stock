@@ -33,10 +33,6 @@ class stock_scrap:
 
     def dbg(self):
         print("Stock: %s, url: %s" % (self.stock_id, self.url))
-        print("Request dates include:"),
-        for date in self.request_dates:
-            print("%s" % date),
-        print("")
         print("Record dates include:"),
         for date in self.record_dates:
             print("%s" % date),
