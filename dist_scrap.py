@@ -26,12 +26,15 @@ class dist_scrap(stock_scrap):
     def get_daily_info(self, date):
         daily_info = {}
         day_dist = []
+        max_level = 15
+        cnt = 0
         root = etree.HTML(self.get_html_str(self.format_url(date)))
         table_rows = root.xpath("//table[@class='mt']/tbody/tr[position()>1]")
         if(table_rows):
             for row in table_rows:
                 idx = row[0].text
-                if (idx != '\xa0'):
+                cnt += 1
+                if (cnt <= max_level):
                     #share_range = row[1].text
                     data = {}
                     #data["min"], data["max"] = self.get_min_max(share_range)
@@ -39,9 +42,11 @@ class dist_scrap(stock_scrap):
                     data["shares"] = self.get_pure_int(row[3].text)
                     data["percent"] = self.get_pure_float(row[4].text)
                     day_dist.append(data)
-                else:
+                elif (idx == '\xa0'):
                     total_owners = self.get_pure_int(row[2].text)
                     total_shares = self.get_pure_int(row[3].text)
+                else:
+                    print("warning: unrecognize pattern %s" % idx)
             daily_info["dist"] = day_dist
             daily_info["total_owners"] = total_owners
             daily_info["total_shares"] = total_shares
@@ -76,7 +81,7 @@ class dist_scrap(stock_scrap):
 
 
     def format_url(self, date):
-        _url = self.url + '?SCA_DATE=' + date + '&SqlMethod=StockNo&StockNo=' + self.stock_id + '&StockName=&sub=%ACd%B8%DF'
+        _url = self.url + '?SCA_DATE=' + date + '&SqlMethod=StockNo&StockNo=' + str(self.stock_id) + '&StockName=&sub=%ACd%B8%DF'
         return _url
 
 if __name__ == '__main__':

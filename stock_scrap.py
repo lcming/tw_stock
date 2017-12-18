@@ -2,13 +2,13 @@
 import datetime
 import urllib.request
 from retry import retry
+from pprint import pprint as pp
 
 class stock_scrap:
     stock_id = None
     url = None
     trace_len = None
     today = None
-    request_dates = []
     record_dates = []
     data = {}
 
@@ -18,7 +18,6 @@ class stock_scrap:
         self.trace_len = _trace_len
         self.url = _url
         self.record_dates.clear()
-        self.request_dates.clear()
         self.data.clear()
 
     def get_date_string(self, d):
@@ -34,9 +33,9 @@ class stock_scrap:
     def dbg(self):
         print("Stock: %s, url: %s" % (self.stock_id, self.url))
         print("Record dates include:"),
-        for date in self.record_dates:
-            print("%s" % date),
-        print("")
+        pp(self.record_dates)
+        print("Record dates include:"),
+        pp(self.data)
     def get_daily_info(self, date):
         assert(False)
 

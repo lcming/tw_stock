@@ -18,6 +18,7 @@ class test_dist_scrap(unittest.TestCase):
         self.assertEqual(some_dist[14]['owners'], 30)
         self.assertEqual(some_dist[14]['shares'], 110885660)
         self.assertEqual(some_dist[14]['percent'], 44.61)
+        ds.dbg()
 
     def test_empty_date(self):
         ds = dist_scrap("3035", 4)
