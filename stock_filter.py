@@ -36,6 +36,8 @@ class stock_filter:
         print(self.owners_dist)
         print("--- percent dist array ---")
         print(self.percent_dist)
+        print("--- foreign diff array ---")
+        print(self.foreign_diff)
 
     def set_parameters(self):
         return
@@ -49,9 +51,21 @@ class stock_filter:
         self.price = np.array(price_2d_array)
         return
 
-    def set_total_shares(self):
-        return
+    def get_scalar_array_from_hash_array(self, hash_array, key):
+        scalar_array = []
+        for item in hash_array:
+            scalar_array.append(item[key])
+        return scalar_array
+
     def set_foreign_diff(self):
+        diff_2d_array = []
+        for stock_id in self.stock_id_set:
+            ins = inst_scrap(stock_id, self.days_traced)
+            ins.set_data()
+            trace_in_range = self.get_sorted_data_in_range(ins.data, self.days_traced)
+            diff_array = self.get_scalar_array_from_hash_array(trace_in_range, 'foreign_diff')
+            diff_2d_array.append(diff_array)
+        self.foreign_diff = np.array(diff_2d_array)
         return
     def get_sorted_data_in_range(self, data, _range):
         sorted_data = collections.OrderedDict(sorted(data.items()))
@@ -72,8 +86,9 @@ class stock_filter:
         total_shares_1d_array = []
         owners_dist_3d_array = []
         percent_dist_3d_array = []
+        weeks_traced = self.days_traced / 7 + 1
         for stock_id in self.stock_id_set:
-            ds = dist_scrap(stock_id, self.days_traced)
+            ds = dist_scrap(stock_id, weeks_traced)
             ds.set_data()
             trace_in_range = self.get_sorted_data_in_range(ds.data, self.days_traced)
             trace_in_range

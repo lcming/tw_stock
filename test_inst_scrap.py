@@ -35,6 +35,7 @@ class test_inst_scrap(unittest.TestCase):
         self.assertNotIn("2017111", inss.data)
         self.assertNotIn("20171126", inss.data)
         self.assertNotIn("20170929", inss.data)
+        inss.dbg()
 
 
 

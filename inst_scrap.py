@@ -23,13 +23,21 @@ class inst_scrap(price_scrap):
 
     def get_stock_id_idx(self, stock_array, stock_id):
         idx = 0
+        found = 0
         stock_id_field = 0
         for stock in stock_array:
-            if (stock[stock_id_field] == stock_id):
+            if (str(stock[stock_id_field]) == str(stock_id)):
+                found = 1
                 break
             else:
                 idx += 1
+        if(found == 0):
+            print("stock not found in %s" % stock_array)
+            idx = -1
+            import sys
+            sys.exit(0)
         return idx
+
 
     def get_daily_info(self, date):
         daily_info = {}
@@ -39,7 +47,15 @@ class inst_scrap(price_scrap):
             idx = self.get_stock_id_idx(data_part, self.stock_id)
             for i in range(2, len(self.data_base_key)):
                 key_name = self.data_base_key[i]
-                daily_info[key_name] = self.get_pure_int(data_part[idx][i])
+                try:
+                    daily_info[key_name] = self.get_pure_int(data_part[idx][i])
+                except IndexError:
+                    from pprint import pprint as pp
+                    import sys
+                    print("idx = %s, i = %d" % (idx, i))
+                    pp(data_part)
+                    sys.exit(0)
+
         else:
             print("No trade on %s" % date)
             daily_info = None
