@@ -1,9 +1,11 @@
 from price_scrap import price_scrap
 from dist_scrap import dist_scrap
 from inst_scrap import inst_scrap
+from pprint import pformat as pf
 import datetime
 import collections
 import numpy as np
+import logging
 
 class stock_filter:
 
@@ -35,31 +37,33 @@ class stock_filter:
         for rm_idx in reversed(rm_list):
             self.stock_id_set.remove(self.stock_id_set[rm_idx])
         self.price = np.delete(self.price, rm_list, 0)
-        self.foreign_diff = np.delete(self.foreign_diff, rm_list)
-        self.total_shares = np.delete(self.total_shares, rm_list)
-        self.owners_dist = np.delete(self.owners_dist, rm_list)
-        self.percent_dist = np.delete(self.percent_dist, rm_list)
+        self.foreign_diff = np.delete(self.foreign_diff, rm_list, 0)
+        self.total_shares = np.delete(self.total_shares, rm_list, 0)
+        self.owners_dist = np.delete(self.owners_dist, rm_list, 0)
+        self.percent_dist = np.delete(self.percent_dist, rm_list, 0)
 
 
     def filt_by_price_now(self):
         rm_list = []
-        print(self.price)
+        logging.debug(self.price)
         for i in range(0, len(self.stock_id_set)):
             if( self.price[i][0] < self.min_price or self.price[i][0] > self.max_price):
                 rm_list.append(i)
+                logging.info("Filter out %s" % self.stock_id_set[i])
         self.remove_stocks(rm_list)
 
     def dbg(self):
-        print("--- price array ---")
-        print(self.price)
-        print("--- total shares array ---")
-        print(self.total_shares)
-        print("--- owners dist array ---")
-        print(self.owners_dist)
-        print("--- percent dist array ---")
-        print(self.percent_dist)
-        print("--- foreign diff array ---")
-        print(self.foreign_diff)
+        logging.debug("DEBUG stock_filter")
+        logging.debug("--- price array ---")
+        logging.debug(self.price)
+        logging.debug("--- total shares array ---")
+        logging.debug(pf(self.total_shares))
+        logging.debug("--- owners dist array ---")
+        logging.debug(pf(self.owners_dist))
+        logging.debug("--- percent dist array ---")
+        logging.debug(pf(self.percent_dist))
+        logging.debug("--- foreign diff array ---")
+        logging.debug(pf(self.foreign_diff))
 
     def get_acc_matrix(self, width):
         acc_2d_arrary = []
@@ -141,6 +145,13 @@ class stock_filter:
                 daily_dist.append(level[keyword])
             dist.append(daily_dist)
         return dist
+
+    def set_all(self):
+        self.set_parameters()
+        self.set_price()
+        self.set_dist()
+        self.set_foreign_diff()
+
 
     def set_dist(self):
         total_shares_1d_array = []

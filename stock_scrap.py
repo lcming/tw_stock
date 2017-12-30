@@ -32,6 +32,7 @@ class stock_scrap:
         self.today = new_date
 
     def dbg(self):
+        logging.debug("DEBUG stock_scrap")
         logging.debug("Stock: %s, url: %s, today: %s" % (self.stock_id, self.url, self.today))
         logging.debug("Record dates include:"),
         logging.debug(pf(self.record_dates))
