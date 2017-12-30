@@ -2,6 +2,8 @@
 from inst_scrap import inst_scrap
 import unittest
 import datetime
+import logging
+import sys
 
 class test_inst_scrap(unittest.TestCase):
     fix_year = 2017
@@ -25,7 +27,7 @@ class test_inst_scrap(unittest.TestCase):
         self.assertEqual(inss.get_stock_id_idx(data_part, "00637L"), 8886)
 
     def test_set_data(self):
-        inss = inst_scrap("3035", 23)
+        inss = inst_scrap("3035", 22)
         inss.set_today(2017, 11, 30)
         inss.set_data()
         self.assertEqual(inss.data["20171031"]['foreign_buy'], 671000)
@@ -35,9 +37,8 @@ class test_inst_scrap(unittest.TestCase):
         self.assertNotIn("2017111", inss.data)
         self.assertNotIn("20171126", inss.data)
         self.assertNotIn("20170929", inss.data)
-        inss.dbg()
-
 
 
 if __name__ == '__main__':
+    logging.basicConfig(filename='test_inst_scrap.log', level=logging.DEBUG)
     unittest.main()

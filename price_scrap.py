@@ -30,7 +30,7 @@ class price_scrap(stock_scrap):
         d = self.today
         while (days_traced < self.trace_len):
             date = self.get_date_string(d)
-            print("request: %s" % date)
+            logging.debug("request: %s" % date)
             raw_data = eval(self.get_html_str(self.format_url(date)))
             data_part = raw_data['data']
 
@@ -38,7 +38,6 @@ class price_scrap(stock_scrap):
             # we might get more than we want
             for day_info in data_part:
                 if(re.match('\d+/\d+/\d+', day_info[0])):
-                    print(day_info)
                     formatted_date = self.format_date(day_info[0])
                     price = self.get_pure_float(day_info[1])
                     self.data[formatted_date] = price

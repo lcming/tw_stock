@@ -28,7 +28,8 @@ class dist_scrap(stock_scrap):
         day_dist = []
         max_level = 15
         cnt = 0
-        root = etree.HTML(self.get_html_str(self.format_url(date)))
+        html_str = self.get_html_str(self.format_url(date))
+        root = etree.HTML(html_str)
         table_rows = root.xpath("//table[@class='mt']/tbody/tr[position()>1]")
         if(table_rows):
             for row in table_rows:
@@ -46,7 +47,7 @@ class dist_scrap(stock_scrap):
                     total_owners = self.get_pure_int(row[2].text)
                     total_shares = self.get_pure_int(row[3].text)
                 else:
-                    print("warning: unrecognize pattern %s" % idx)
+                    logging.warn("warning: unrecognize pattern %s" % idx)
             daily_info["dist"] = day_dist
             daily_info["total_owners"] = total_owners
             daily_info["total_shares"] = total_shares
@@ -65,7 +66,7 @@ class dist_scrap(stock_scrap):
                 self.record_dates.append(date)
                 self.data[date] = valid_daily_info
                 days_traced += 1
-                print("set %s" % date)
+                logging.debug("set %s" % date)
             d -= datetime.timedelta(1)
         if(len(self.record_dates) > 0):
             self.set_range()
@@ -73,7 +74,7 @@ class dist_scrap(stock_scrap):
     def set_range(self):
         most_recent = self.record_dates[0]
         root = etree.HTML(self.get_html_str(self.format_url(most_recent)))
-        table_rows = root.xpath("//table[@class='mt']/tbody/tr[position()>1]")
+        table_rows = root.xpath("//table/tbody/tr[position()>1]")
         for row in table_rows:
             idx = row[0].text
             if (idx != '\xa0'):

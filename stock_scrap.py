@@ -2,7 +2,8 @@
 import datetime
 import urllib.request
 from retry import retry
-from pprint import pprint as pp
+from pprint import pformat as pf
+import logging
 
 class stock_scrap:
     stock_id = None
@@ -31,11 +32,11 @@ class stock_scrap:
         self.today = new_date
 
     def dbg(self):
-        print("Stock: %s, url: %s" % (self.stock_id, self.url))
-        print("Record dates include:"),
-        pp(self.record_dates)
-        print("Record dates include:"),
-        pp(self.data)
+        logging.debug("Stock: %s, url: %s, today: %s" % (self.stock_id, self.url, self.today))
+        logging.debug("Record dates include:"),
+        logging.debug(pf(self.record_dates))
+        logging.debug("Record dates include:"),
+        logging.debug(pf(self.data))
     def get_daily_info(self, date):
         assert(False)
 
@@ -44,11 +45,16 @@ class stock_scrap:
 
     def get_pure_int(self, number):
         import re
+        pat = re.compile('^\s*-')
+        negtive = pat.match(number)
         pat = re.compile('\..*')
         number = pat.sub("", number)
         pat = re.compile('\D')
         number = pat.sub("", number)
-        return int(number)
+        if(negtive):
+            return -int(number)
+        else:
+            return int(number)
     def get_pure_float(self, number):
         import re
         pat = re.compile('((?=[^\.])\D)')
@@ -74,7 +80,7 @@ class stock_scrap:
     def get_html_str(self, url):
         import time
         import os.path
-        print(url)
+        logging.debug(url)
         full_name = self.url_to_cache_path(url)
         if(os.path.isfile(full_name)):
             fh = open(full_name, "r")

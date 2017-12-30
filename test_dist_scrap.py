@@ -3,6 +3,7 @@
 from dist_scrap import dist_scrap
 from stock_scrap import stock_scrap
 import unittest
+import logging
 
 class test_dist_scrap(unittest.TestCase):
 
@@ -27,6 +28,7 @@ class test_dist_scrap(unittest.TestCase):
         self.assertEqual(ds.get_daily_info("20171123"), None)
 
 if __name__ == '__main__':
+    logging.basicConfig(filename='test_dist_scrap.log', level=logging.DEBUG)
     unittest.main()
 
 

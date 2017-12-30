@@ -4,10 +4,11 @@ from lxml import etree, html
 from retry import retry
 import urllib.request
 import logging
-import pprint
+from pprint import pprint as pp
 import re
 import datetime
 from price_scrap import price_scrap
+import sys
 
 class inst_scrap(price_scrap):
     data_base_key = ['stock_id', 'name', 'foreign_buy', 'foreign_sell', 'foreign_diff', 'invest_buy', 'invest_sell', 'invest_diff', 'dealer_diff', 'dealer_buy_normal', 'dealer_sell_normal', 'dealer_diff_normal', 'dealer_buy_hedge', 'dealer_sell_hedge', 'dealer_diff_hedge', 'total_diff']
@@ -32,9 +33,7 @@ class inst_scrap(price_scrap):
             else:
                 idx += 1
         if(found == 0):
-            print("stock not found in %s" % stock_array)
-            idx = -1
-            import sys
+            logging.error("stock not found in %s" % stock_array)
             sys.exit(0)
         return idx
 
@@ -50,19 +49,18 @@ class inst_scrap(price_scrap):
                 try:
                     daily_info[key_name] = self.get_pure_int(data_part[idx][i])
                 except IndexError:
-                    from pprint import pprint as pp
-                    import sys
-                    print("idx = %s, i = %d" % (idx, i))
+                    logging.error("Out bound: idx = %s, i = %d" % (idx, i))
                     pp(data_part)
                     sys.exit(0)
 
         else:
-            print("No trade on %s" % date)
+            logging.info("No trade on %s" % date)
             daily_info = None
         return daily_info
 
     def set_data(self):
         d = self.today
+        logging.info("Today is %s" % d)
         days_traced = 0
         while (days_traced < self.trace_len):
             date = self.get_date_string(d)

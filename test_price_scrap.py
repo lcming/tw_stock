@@ -3,6 +3,7 @@ from price_scrap import price_scrap
 from stock_scrap import stock_scrap
 import unittest
 import datetime
+import logging
 
 class test_dist_scrap(unittest.TestCase):
     fix_year = 2017
@@ -38,4 +39,5 @@ class test_dist_scrap(unittest.TestCase):
         self.assertEqual(len(ps.data), 41)
 
 if __name__ == '__main__':
+    logging.basicConfig(filename='test_price_scrap.log', level=logging.DEBUG)
     unittest.main()
