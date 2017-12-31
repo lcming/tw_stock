@@ -16,7 +16,6 @@ class inst_scrap(price_scrap):
     def __init__(self, _stock_id, _trace_len):
         super().__init__(_stock_id, _trace_len)
         self.url = 'http://www.twse.com.tw/fund/T86?response=json&selectType=ALL&'
-        self.cache_name = "inst_scrap_cache" + str(_stock_id) + ".txt"
 
     def format_url(self, date):
         _url = self.url + "date=" + date

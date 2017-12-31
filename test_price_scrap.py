@@ -25,18 +25,11 @@ class test_dist_scrap(unittest.TestCase):
         ps = price_scrap("3035", 22)
         ps.set_today(2017, 11, 30)
         ps.set_data()
-        self.assertEqual(len(ps.data), 22)
         self.assertEqual(ps.data["20171127"], 58.4)
         self.assertEqual(ps.data["20171128"], 57.3)
         self.assertEqual(ps.data["20171129"], 63)
         self.assertIn("20171101", ps.data)
         self.assertNotIn("20171001", ps.data)
-
-    def test_set_data_more_than_we_want(self):
-        ps = price_scrap("3035", 23)
-        ps.set_today(2017, 11, 30)
-        ps.set_data()
-        self.assertEqual(len(ps.data), 41)
 
 if __name__ == '__main__':
     logging.basicConfig(filename='test_price_scrap.log', level=logging.DEBUG)

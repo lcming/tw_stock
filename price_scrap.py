@@ -28,6 +28,9 @@ class price_scrap(stock_scrap):
     def set_data(self):
         days_traced = 0
         d = self.today
+
+        self.load_cache_data()
+
         while (days_traced < self.trace_len):
             date = self.get_date_string(d)
             logging.debug("request: %s" % date)
@@ -44,6 +47,8 @@ class price_scrap(stock_scrap):
                     self.record_dates.append(formatted_date)
                     days_traced += 1
             d = self.get_last_day_of_prev_month(d)
+
+        self.store_cache_data()
 
     def format_url(self, date):
         _url = self.url + '?response=json&date=' + date + '&stockNo=' + str(self.stock_id)

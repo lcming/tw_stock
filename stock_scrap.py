@@ -25,6 +25,7 @@ class stock_scrap:
         self.url = _url
         self.record_dates.clear()
         self.data.clear()
+        self.cache_name =  "./cache/" + self.__class__.__name__+ str(_stock_id) + ".txt"
 
     def get_date_string(self, d):
         y_str = d.year

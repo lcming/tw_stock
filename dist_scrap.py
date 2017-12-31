@@ -59,6 +59,9 @@ class dist_scrap(stock_scrap):
     def set_data(self):
         days_traced = 0
         d = self.today
+
+        self.load_cache_data()
+
         while (days_traced < self.trace_len):
             date = self.get_date_string(d)
             valid_daily_info = self.get_daily_info(date)
@@ -70,6 +73,8 @@ class dist_scrap(stock_scrap):
             d -= datetime.timedelta(1)
         if(len(self.record_dates) > 0):
             self.set_range()
+
+        self.store_cache_data()
 
     def set_range(self):
         most_recent = self.record_dates[0]
