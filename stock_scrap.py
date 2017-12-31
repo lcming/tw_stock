@@ -43,6 +43,7 @@ class stock_scrap:
         logging.debug(pf(self.record_dates))
         logging.debug("Record dates include:"),
         logging.debug(pf(self.data))
+
     def get_daily_info(self, date):
         assert(False)
 
