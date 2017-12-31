@@ -34,10 +34,6 @@ class test_inst_scrap(unittest.TestCase):
         self.assertEqual(inss.data["20171031"]['foreign_buy'], 671000)
         self.assertEqual(inss.data["20171127"]['foreign_sell'], 1682000)
         self.assertEqual(inss.data["20171129"]['total_diff'], 5041000)
-        self.assertNotIn("20171030", inss.data)
-        self.assertNotIn("2017111", inss.data)
-        self.assertNotIn("20171126", inss.data)
-        self.assertNotIn("20170929", inss.data)
 
     def test_cache_data(self):
         tmp_cache_name = "tmp_cache_for_test.txt"

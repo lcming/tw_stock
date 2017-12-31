@@ -11,7 +11,6 @@ class test_dist_scrap(unittest.TestCase):
         ds = dist_scrap("3035", 4)
         ds.set_today(2017, 11, 30)
         ds.set_data()
-        self.assertEqual(len(ds.data), 4)
         self.assertEqual(ds.data["20171117"]["total_owners"], 46531)
         self.assertEqual(ds.data["20171117"]["total_shares"], 248550313)
         some_dist = ds.data["20171124"]["dist"]

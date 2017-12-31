@@ -33,20 +33,23 @@ class price_scrap(stock_scrap):
 
         while (days_traced < self.trace_len):
             date = self.get_date_string(d)
-            logging.debug("request: %s" % date)
-            raw_data = eval(self.get_html_str(self.format_url(date)))
-            data_part = raw_data['data']
-
-            # fetched data include all trade days of this month
-            # we might get more than we want
-            for day_info in data_part:
-                if(re.match('\d+/\d+/\d+', day_info[0])):
-                    formatted_date = self.format_date(day_info[0])
-                    price = self.get_pure_float(day_info[1])
-                    self.data[formatted_date] = price
-                    self.record_dates.append(formatted_date)
-                    days_traced += 1
-            d = self.get_last_day_of_prev_month(d)
+            if(date in self.data):
+                days_traced += 1
+                self.hit_count += 1
+            else:
+                logging.info("Cache miss on %s" % date)
+                raw_data = eval(self.get_html_str(self.format_url(date)))
+                data_part = raw_data['data']
+                # fetched data include all trade days of this month
+                # we might get more than we want
+                for day_info in data_part:
+                    if(re.match('\d+/\d+/\d+', day_info[0])):
+                        formatted_date = self.format_date(day_info[0])
+                        price = self.get_pure_float(day_info[1])
+                        self.data[formatted_date] = price
+                        self.record_dates.append(formatted_date)
+                        days_traced += 1
+                d = self.get_last_day_of_prev_month(d)
 
         self.store_cache_data()
 

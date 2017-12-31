@@ -31,6 +31,9 @@ class stock_filter:
     m = 12
     d = 29
     test_mode = 0
+    foreign_diff_dates = []
+    owners_dist_dates = []
+    price_dates = []
 
 
     def remove_stocks(self, rm_list):
@@ -54,6 +57,10 @@ class stock_filter:
 
     def dbg(self):
         logging.debug("DEBUG stock_filter")
+        logging.debug("--- Trace from ---")
+        logging.debug("%s/%s/%s" % (self.y, self.m, self.d))
+        logging.debug("--- stock IDs ---")
+        logging.debug(self.stock_id_set)
         logging.debug("--- price array ---")
         logging.debug(self.price)
         logging.debug("--- total shares array ---")
@@ -125,15 +132,18 @@ class stock_filter:
             if(self.test_mode):
                 ins.set_today(self.y, self.m, self.d )
             ins.set_data()
+            ins.dbg()
             trace_in_range = self.get_sorted_data_in_range(ins.data, self.days_traced)
             diff_array = self.get_scalar_array_from_hash_array(trace_in_range, 'foreign_diff')
             diff_2d_array.append(diff_array)
         self.foreign_diff = np.array(diff_2d_array)
         return
+
     def get_sorted_data_in_range(self, data, _range):
         sorted_data = []
         for i in sorted(data):
-            sorted_data.append(data[i])
+            if(data[i]):
+                sorted_data.append(data[i])
         value_only_list = list(reversed(sorted_data))
         return value_only_list[0:_range]
 

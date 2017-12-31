@@ -76,33 +76,17 @@ class stock_scrap:
         full_name = cache_dir + "/" + filename
         return full_name
 
-    def write_cache_data(self, content, url):
-        import os
-        full_name = self.url_to_cache_path(url)
-        os.makedirs(os.path.dirname(full_name), exist_ok=True)
-        with open(full_name, "w") as fh:
-            fh.write(str(content))
-            fh.close()
-
     @retry(urllib.error.URLError)
     def get_html_str(self, url):
         import time
-        import os.path
         logging.debug(url)
-        full_name = self.url_to_cache_path(url)
-        if(os.path.isfile(full_name)):
-            fh = open(full_name, "r")
-            html_str = str(fh.read())
-            fh.close()
-        else:
-            time.sleep(2)
-            try:
-                rsp = urllib.request.urlopen(url)
-                html_str = rsp.read().decode('utf8')
-            except UnicodeDecodeError:
-                rsp = urllib.request.urlopen(url)
-                html_str = rsp.read().decode('big5')
-            self.write_cache_data(html_str, url)
+        time.sleep(2)
+        try:
+            rsp = urllib.request.urlopen(url)
+            html_str = rsp.read().decode('utf8')
+        except UnicodeDecodeError:
+            rsp = urllib.request.urlopen(url)
+            html_str = rsp.read().decode('big5')
         return html_str
 
     def load_cache_data(self):
@@ -110,7 +94,7 @@ class stock_scrap:
             with open(self.cache_name, 'r', encoding='utf-8') as infile:
                 cache_str = infile.read()
                 self.data = eval(cache_str)
-                logging.debug("load cache data %s" % self.data)
+                logging.debug("load cache data")
                 infile.close()
         except FileNotFoundError:
             logging.info("Initialize cache %s" % self.cache_name)
@@ -120,7 +104,7 @@ class stock_scrap:
 
     def store_cache_data(self):
         with open(self.cache_name, 'w', encoding='utf-8') as outfile:
-            logging.debug("store cache data %s" % str(self.data))
+            logging.info("store cache data")
             outfile.write(str(self.data))
             outfile.close()
 

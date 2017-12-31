@@ -64,27 +64,18 @@ class dist_scrap(stock_scrap):
 
         while (days_traced < self.trace_len):
             date = self.get_date_string(d)
-            valid_daily_info = self.get_daily_info(date)
-            if(valid_daily_info):
-                self.record_dates.append(date)
-                self.data[date] = valid_daily_info
+            if(date in self.data):
                 days_traced += 1
-                logging.debug("set %s" % date)
+                self.hit_count += 1
+            else:
+                logging.info("Cache miss on %s" % date)
+                self.data[date] = self.get_daily_info(date)
+                if(self.data[date]):
+                    self.record_dates.append(date)
+                    days_traced += 1
             d -= datetime.timedelta(1)
-        if(len(self.record_dates) > 0):
-            self.set_range()
 
         self.store_cache_data()
-
-    def set_range(self):
-        most_recent = self.record_dates[0]
-        root = etree.HTML(self.get_html_str(self.format_url(most_recent)))
-        table_rows = root.xpath("//table/tbody/tr[position()>1]")
-        for row in table_rows:
-            idx = row[0].text
-            if (idx != '\xa0'):
-                self.ranges.append(row[1].text)
-
 
     def format_url(self, date):
         _url = self.url + '?SCA_DATE=' + date + '&SqlMethod=StockNo&StockNo=' + str(self.stock_id) + '&StockName=&sub=%ACd%B8%DF'

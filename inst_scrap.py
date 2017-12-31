@@ -73,10 +73,9 @@ class inst_scrap(price_scrap):
                 self.hit_count += 1
             else:
                 logging.info("Cache miss on %s" % date)
-                valid_daily_info = self.get_daily_info(date)
-                if(valid_daily_info):
+                self.data[date] = self.get_daily_info(date)
+                if(self.data[date]):
                     self.record_dates.append(date)
-                    self.data[date] = valid_daily_info
                     days_traced += 1
             d -= datetime.timedelta(1)
 
