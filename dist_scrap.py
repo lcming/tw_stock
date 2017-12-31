@@ -23,7 +23,7 @@ class dist_scrap(stock_scrap):
             matched.append(None)
         return matched
 
-    def get_daily_info(self, date):
+    def set_daily_info(self, date):
         daily_info = {}
         day_dist = []
         max_level = 15
@@ -54,28 +54,8 @@ class dist_scrap(stock_scrap):
         else:
             daily_info = None
 
-        return daily_info
+        self.data[date] = daily_info
 
-    def set_data(self):
-        days_traced = 0
-        d = self.today
-
-        self.load_cache_data()
-
-        while (days_traced < self.trace_len):
-            date = self.get_date_string(d)
-            if(date in self.data):
-                days_traced += 1
-                self.hit_count += 1
-            else:
-                logging.info("Cache miss on %s" % date)
-                self.data[date] = self.get_daily_info(date)
-                if(self.data[date]):
-                    self.record_dates.append(date)
-                    days_traced += 1
-            d -= datetime.timedelta(1)
-
-        self.store_cache_data()
 
     def format_url(self, date):
         _url = self.url + '?SCA_DATE=' + date + '&SqlMethod=StockNo&StockNo=' + str(self.stock_id) + '&StockName=&sub=%ACd%B8%DF'

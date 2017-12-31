@@ -20,11 +20,11 @@ class test_dist_scrap(unittest.TestCase):
         self.assertEqual(some_dist[14]['percent'], 44.61)
         ds.dbg()
 
-    def test_empty_date(self):
-        ds = dist_scrap("3035", 4)
-        ds.set_today(2017, 11, 30)
-        self.assertEqual(ds.get_daily_info("20181111"), None)
-        self.assertEqual(ds.get_daily_info("20171123"), None)
+    #def test_empty_date(self):
+    #    ds = dist_scrap("3035", 4)
+    #    ds.set_today(2017, 11, 30)
+    #    self.assertEqual(ds.get_daily_info("20181111"), None)
+    #    self.assertEqual(ds.get_daily_info("20171123"), None)
 
 if __name__ == '__main__':
     logging.basicConfig(filename='test_dist_scrap.log', level=logging.DEBUG)

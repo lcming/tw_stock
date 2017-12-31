@@ -45,7 +45,7 @@ class stock_scrap:
         logging.debug("Record dates include:"),
         logging.debug(pf(self.data))
 
-    def get_daily_info(self, date):
+    def set_daily_info(self, date):
         assert(False)
 
     def format_url(self, date):
@@ -121,10 +121,13 @@ class stock_scrap:
                 self.hit_count += 1
             else:
                 logging.info("Cache miss on %s" % date)
-                self.data[date] = self.get_daily_info(date)
-                if(self.data[date]):
-                    self.record_dates.append(date)
-                    days_traced += 1
+                self.set_daily_info(date)
+                try:
+                    if(self.data[date]):
+                        self.record_dates.append(date)
+                        days_traced += 1
+                except KeyError:
+                    self.data[date] = None
             d -= datetime.timedelta(1)
 
         self.store_cache_data()

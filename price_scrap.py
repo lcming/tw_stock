@@ -25,7 +25,7 @@ class price_scrap(stock_scrap):
         y = int(y) + 1911
         return str(y) + str(m) + str(d)
 
-    def get_daily_info(self, date):
+    def set_daily_info(self, date):
         raw_data = eval(self.get_html_str(self.format_url(date)))
         data_part = raw_data['data']
         for day_info in data_part:

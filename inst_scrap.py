@@ -38,7 +38,7 @@ class inst_scrap(price_scrap):
         return idx
 
 
-    def get_daily_info(self, date):
+    def set_daily_info(self, date):
         daily_info = {}
         raw_data = eval(self.get_html_str(self.format_url(date)))
         if 'data' in raw_data:
@@ -56,5 +56,6 @@ class inst_scrap(price_scrap):
         else:
             logging.info("No trade on %s" % date)
             daily_info = None
-        return daily_info
+
+        self.data[date] = daily_info
 
