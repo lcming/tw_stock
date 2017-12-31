@@ -25,33 +25,14 @@ class price_scrap(stock_scrap):
         y = int(y) + 1911
         return str(y) + str(m) + str(d)
 
-    def set_data(self):
-        days_traced = 0
-        d = self.today
-
-        self.load_cache_data()
-
-        while (days_traced < self.trace_len):
-            date = self.get_date_string(d)
-            if(date in self.data):
-                days_traced += 1
-                self.hit_count += 1
-            else:
-                logging.info("Cache miss on %s" % date)
-                raw_data = eval(self.get_html_str(self.format_url(date)))
-                data_part = raw_data['data']
-                # fetched data include all trade days of this month
-                # we might get more than we want
-                for day_info in data_part:
-                    if(re.match('\d+/\d+/\d+', day_info[0])):
-                        formatted_date = self.format_date(day_info[0])
-                        price = self.get_pure_float(day_info[1])
-                        self.data[formatted_date] = price
-                        self.record_dates.append(formatted_date)
-                        days_traced += 1
-                d = self.get_last_day_of_prev_month(d)
-
-        self.store_cache_data()
+    def get_daily_info(self, date):
+        raw_data = eval(self.get_html_str(self.format_url(date)))
+        data_part = raw_data['data']
+        for day_info in data_part:
+            if(re.match('\d+/\d+/\d+', day_info[0])):
+                formatted_date = self.format_date(day_info[0])
+                price = self.get_pure_float(day_info[1])
+                self.data[formatted_date] = price
 
     def format_url(self, date):
         _url = self.url + '?response=json&date=' + date + '&stockNo=' + str(self.stock_id)

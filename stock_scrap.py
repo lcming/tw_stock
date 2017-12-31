@@ -108,6 +108,27 @@ class stock_scrap:
             outfile.write(str(self.data))
             outfile.close()
 
+    def set_data(self):
+        days_traced = 0
+        d = self.today
+
+        self.load_cache_data()
+
+        while (days_traced < self.trace_len):
+            date = self.get_date_string(d)
+            if(date in self.data):
+                days_traced += 1
+                self.hit_count += 1
+            else:
+                logging.info("Cache miss on %s" % date)
+                self.data[date] = self.get_daily_info(date)
+                if(self.data[date]):
+                    self.record_dates.append(date)
+                    days_traced += 1
+            d -= datetime.timedelta(1)
+
+        self.store_cache_data()
+
 
 
 
