@@ -16,6 +16,7 @@ class inst_scrap(price_scrap):
     def __init__(self, _stock_id, _trace_len):
         super().__init__(_stock_id, _trace_len)
         self.url = 'http://www.twse.com.tw/fund/T86?response=json&selectType=ALL&'
+        self.cache_name = "inst_scrap_cache" + str(_stock_id) + ".txt"
 
     def format_url(self, date):
         _url = self.url + "date=" + date
@@ -58,17 +59,29 @@ class inst_scrap(price_scrap):
             daily_info = None
         return daily_info
 
+
     def set_data(self):
         d = self.today
         logging.info("Today is %s" % d)
         days_traced = 0
+
+        self.load_cache_data()
+
         while (days_traced < self.trace_len):
             date = self.get_date_string(d)
-            valid_daily_info = self.get_daily_info(date)
-            if(valid_daily_info):
-                self.record_dates.append(date)
-                self.data[date] = valid_daily_info
+            if(date in self.data):
                 days_traced += 1
+                self.hit_count += 1
+            else:
+                logging.info("Cache miss on %s" % date)
+                valid_daily_info = self.get_daily_info(date)
+                if(valid_daily_info):
+                    self.record_dates.append(date)
+                    self.data[date] = valid_daily_info
+                    days_traced += 1
             d -= datetime.timedelta(1)
+
+        self.store_cache_data()
+
 
 

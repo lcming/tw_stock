@@ -4,6 +4,7 @@ import urllib.request
 from retry import retry
 from pprint import pformat as pf
 import logging
+import os
 
 class stock_scrap:
     stock_id = None
@@ -11,7 +12,11 @@ class stock_scrap:
     trace_len = None
     today = None
     record_dates = []
+    cache_data = {}
     data = {}
+
+    # dbg
+    hit_count = 0
 
     def __init__(self, _stock_id, _trace_len, _url):
         self.today = datetime.date.today()
@@ -97,6 +102,25 @@ class stock_scrap:
                 html_str = rsp.read().decode('big5')
             self.write_cache_data(html_str, url)
         return html_str
+
+    def load_cache_data(self):
+        try:
+            with open(self.cache_name, 'r', encoding='utf-8') as infile:
+                cache_str = infile.read()
+                self.data = eval(cache_str)
+                logging.debug("load cache data %s" % self.data)
+                infile.close()
+        except FileNotFoundError:
+            logging.info("Initialize cache %s" % self.cache_name)
+            with open(self.cache_name, 'w', encoding='utf-8') as outfile:
+                outfile.close()
+            return
+
+    def store_cache_data(self):
+        with open(self.cache_name, 'w', encoding='utf-8') as outfile:
+            logging.debug("store cache data %s" % str(self.data))
+            outfile.write(str(self.data))
+            outfile.close()
 
 
 

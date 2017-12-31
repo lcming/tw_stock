@@ -4,6 +4,7 @@ import unittest
 import datetime
 import logging
 import sys
+import os
 
 class test_inst_scrap(unittest.TestCase):
     fix_year = 2017
@@ -38,6 +39,22 @@ class test_inst_scrap(unittest.TestCase):
         self.assertNotIn("20171126", inss.data)
         self.assertNotIn("20170929", inss.data)
 
+    def test_cache_data(self):
+        tmp_cache_name = "tmp_cache_for_test.txt"
+        if(os.path.isfile(tmp_cache_name)):
+            os.remove(tmp_cache_name)
+
+        inss = inst_scrap("3035", 10)
+        inss.set_today(2017, 11, 30)
+        inss.cache_name = tmp_cache_name
+        inss.set_data()
+
+        inss = inst_scrap("3035", 10)
+        inss.set_today(2017, 12, 1)
+        inss.cache_name = tmp_cache_name
+        inss.set_data()
+
+        self.assertEqual(inss.hit_count, 9)
 
 if __name__ == '__main__':
     logging.basicConfig(filename='test_inst_scrap.log', level=logging.DEBUG)
