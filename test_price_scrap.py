@@ -39,17 +39,20 @@ class test_dist_scrap(unittest.TestCase):
 
         ps = price_scrap("3035", 10)
         ps.set_today(2017, 11, 30)
-        ps.cache_name = tmp_cache_name
+        if('flush' in os.environ):
+            ps.cache_name = tmp_cache_name
         ps.set_data()
         ps.dbg()
 
         ps = price_scrap("3035", 10)
         ps.set_today(2017, 12, 1)
-        ps.cache_name = tmp_cache_name
+        if('flush' in os.environ):
+            ps.cache_name = tmp_cache_name
         ps.set_data()
         ps.dbg()
 
-        self.assertEqual(ps.hit_count, 9)
+        if('flush' in os.environ):
+            self.assertEqual(ps.hit_count, 9)
         self.assertAlmostEqual(ps.data['20171201'], 61.3)
         self.assertAlmostEqual(ps.data['20171130'], 63.9)
         self.assertAlmostEqual(ps.data['20171129'], 63.0)

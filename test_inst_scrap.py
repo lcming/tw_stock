@@ -6,6 +6,7 @@ import logging
 import sys
 import os
 
+
 class test_inst_scrap(unittest.TestCase):
     fix_year = 2017
     fix_month = 12
@@ -17,15 +18,6 @@ class test_inst_scrap(unittest.TestCase):
         self.assertEqual(inss.format_url("20171201"), ex_url)
         self.assertNotEqual(inss.format_url("20161001"), ex_url)
 
-    def test_get_stock_id_idx(self):
-        inss = inst_scrap("2330", 3)
-        ex_url = 'http://www.twse.com.tw/fund/T86?response=json&selectType=ALL&date=20171201'
-        raw_data = eval(inss.get_html_str(ex_url))
-        data_part = raw_data['data']
-        self.assertEqual(inss.get_stock_id_idx(data_part, "00632R"), 0)
-        self.assertEqual(inss.get_stock_id_idx(data_part, "2882"), 1)
-        self.assertEqual(inss.get_stock_id_idx(data_part, "2891"), 2)
-        self.assertEqual(inss.get_stock_id_idx(data_part, "00637L"), 8886)
 
     def test_set_data(self):
         inss = inst_scrap("3035", 22)
@@ -42,15 +34,33 @@ class test_inst_scrap(unittest.TestCase):
 
         inss = inst_scrap("3035", 10)
         inss.set_today(2017, 11, 30)
-        inss.cache_name = tmp_cache_name
+        if('flush' in os.environ):
+            inss.cache_name = tmp_cache_name
         inss.set_data()
 
         inss = inst_scrap("3035", 10)
         inss.set_today(2017, 12, 1)
-        inss.cache_name = tmp_cache_name
+        if('flush' in os.environ):
+            inss.cache_name = tmp_cache_name
         inss.set_data()
 
-        self.assertEqual(inss.hit_count, 9)
+        if('flush' in os.environ):
+            self.assertEqual(inss.hit_count, 9)
+        self.assertEqual(inss.data['20171201']['foreign_diff'], -731200)
+        self.assertEqual(inss.data['20171130']['foreign_diff'], 2443000)
+        self.assertEqual(inss.data['20171117']['foreign_diff'], -1448000)
+        self.assertEqual(inss.data['20171118'], None)
+
+    def test_get_stock_id_idx(self):
+        inss = inst_scrap("2330", 3)
+        ex_url = 'http://www.twse.com.tw/fund/T86?response=json&selectType=ALL&date=20171201'
+        raw_data = eval(inss.get_html_str(ex_url))
+        data_part = raw_data['data']
+        self.assertEqual(inss.get_stock_id_idx(data_part, "00632R"), 0)
+        self.assertEqual(inss.get_stock_id_idx(data_part, "2882"), 1)
+        self.assertEqual(inss.get_stock_id_idx(data_part, "2891"), 2)
+        self.assertEqual(inss.get_stock_id_idx(data_part, "00637L"), 8886)
+
 
 if __name__ == '__main__':
     logging.basicConfig(filename='test_inst_scrap.log', level=logging.DEBUG)
