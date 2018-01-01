@@ -1,9 +1,6 @@
 #!/usr/bin/python3
 
-from dist_scrap import dist_scrap
-from stock_scrap import stock_scrap
-from inst_scrap import inst_scrap
-from price_scrap import price_scrap
+from stock_filter import stock_filter
 import unittest
 import logging
 
@@ -13,10 +10,11 @@ class test_stock_filter(unittest.TestCase):
         sf = stock_filter()
         sf.stock_id_set = [3034, 3035]
         sf.test_mode = 1
+        sf.days_traced = 10
         sf.set_all()
         return sf
 
-    def filt_by_price_now(self):
+    def test_filt_by_price_now(self):
         sf = self.build_sample_stock_filter()
         sf.filt_by_price_now()
         self.assertIn(3035, sf.stock_id_set)
@@ -31,7 +29,7 @@ class test_stock_filter(unittest.TestCase):
     def set_inst(self):
         return
 
-    def get_all_stock_list(self):
+    def test_get_all_stock_list(self):
         sf = stock_filter()
         stock_list = sf.get_all_stock_list()
         self.assertIn(1102, stock_list)
@@ -40,8 +38,7 @@ class test_stock_filter(unittest.TestCase):
         self.assertIn(1605, stock_list)
         self.assertIn(2353, stock_list)
         self.assertIn(9945, stock_list)
-        self.assertIn(9962, stock_list)
 
 if __name__ == '__main__':
-    logging.basicConfig(filename='test_dist_scrap.log', level=logging.DEBUG)
+    logging.basicConfig(filename='test_stock_filter.log', level=logging.DEBUG)
     unittest.main()

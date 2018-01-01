@@ -96,7 +96,7 @@ class stock_scrap:
                 self.data = eval(cache_str)
                 logging.debug("load cache data")
                 infile.close()
-        except FileNotFoundError:
+        except (FileNotFoundError, SyntaxError) as e:
             logging.info("Initialize cache %s" % self.cache_name)
             with open(self.cache_name, 'w', encoding='utf-8') as outfile:
                 outfile.close()
