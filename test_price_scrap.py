@@ -52,7 +52,8 @@ class test_dist_scrap(unittest.TestCase):
         ps.dbg()
 
         if('flush' in os.environ):
-            self.assertEqual(ps.hit_count, 9)
+            # 9 hits on valid trade, 2 hits on no trade
+            self.assertEqual(ps.hit_count, 11)
         self.assertAlmostEqual(ps.data['20171201'], 61.3)
         self.assertAlmostEqual(ps.data['20171130'], 63.9)
         self.assertAlmostEqual(ps.data['20171129'], 63.0)

@@ -80,7 +80,7 @@ class stock_scrap:
     def get_html_str(self, url):
         import time
         logging.debug(url)
-        time.sleep(2)
+        time.sleep(4)
         try:
             rsp = urllib.request.urlopen(url)
             html_str = rsp.read().decode('utf8')
@@ -117,8 +117,9 @@ class stock_scrap:
         while (days_traced < self.trace_len):
             date = self.get_date_string(d)
             if(date in self.data):
-                days_traced += 1
                 self.hit_count += 1
+                if(self.data[date]):
+                    days_traced += 1
             else:
                 logging.info("Cache miss on %s" % date)
                 self.set_daily_info(date)
