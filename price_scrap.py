@@ -26,8 +26,13 @@ class price_scrap(stock_scrap):
         return str(y) + str(m) + str(d)
 
     def set_daily_info(self, date):
-        raw_data = eval(self.get_html_str(self.format_url(date)))
-        data_part = raw_data['data']
+        url = self.format_url(date)
+        raw_data = eval(self.get_html_str(url))
+        try:
+            data_part = raw_data['data']
+        except KeyError:
+            logging.info("No price info. on %s" % date)
+            return
         for day_info in data_part:
             if(re.match('\d+/\d+/\d+', day_info[0])):
                 formatted_date = self.format_date(day_info[0])

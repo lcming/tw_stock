@@ -19,7 +19,7 @@ class stock_scrap:
     hit_count = 0
 
     def __init__(self, _stock_id, _trace_len, _url):
-        self.today = datetime.date.today()
+        self.today = datetime.date.today() - datetime.timedelta(1)
         self.stock_id = _stock_id
         self.trace_len = _trace_len
         self.url = _url

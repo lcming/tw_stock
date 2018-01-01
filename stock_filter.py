@@ -1,11 +1,14 @@
 from price_scrap import price_scrap
 from dist_scrap import dist_scrap
 from inst_scrap import inst_scrap
+from stock_scrap import stock_scrap
 from pprint import pformat as pf
 import datetime
 import collections
 import numpy as np
 import logging
+import re
+import urllib.request
 
 class stock_filter:
 
@@ -186,3 +189,21 @@ class stock_filter:
         self.percent_dist = np.array(percent_dist_3d_array)
         self.owners_dist = np.array(owners_dist_3d_array)
         return
+
+    def get_all_stock_list(self):
+        url = 'http://www.twse.com.tw/fund/T86?response=json&selectType=ALL&date=20171201'
+        rsp = urllib.request.urlopen(url)
+        html_str = rsp.read().decode('utf8')
+        raw_data = eval(html_str)
+        data_part = raw_data['data']
+        all_stock_list = []
+        for stock in  data_part:
+            stock_id = stock[0]
+            pat = re.compile('^\d{4}$')
+            if(pat.match(stock_id)):
+                all_stock_list.append(int(stock_id))
+        logging.debug("all_stock_list: %s" % str(all_stock_list))
+        return all_stock_list
+
+
+
