@@ -48,11 +48,12 @@ class test_stock_filter(unittest.TestCase):
         sf.test_mode = 1
         sf.days_traced = 10
         sf.set_dist()
+        sf.dbg()
         for i in (sf.percent_dist, sf.owners_dist):
+            self.assertEqual(np.size(i), 60)
             self.assertEqual(np.size(i, 0), 2)
-            self.assertEqual(np.size(i[0], 0), 2)
-            self.assertEqual(np.size(i[1], 0), 2)
-            self.assertEqual(np.size(i[1], 1), 15)
+            self.assertEqual(np.size(i, 1), 2)
+            self.assertEqual(np.size(i, 2), 15)
 
 if __name__ == '__main__':
     logging.basicConfig(filename='test_stock_filter.log', level=logging.DEBUG)

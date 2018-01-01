@@ -150,14 +150,16 @@ class stock_filter:
         value_only_list = list(reversed(sorted_data))
         return value_only_list[0:_range]
 
-    def get_pure_array_by_keyword(self, data, keyword):
+    def get_pure_3d_array_by_keyword(self, data, keyword):
         dist = []
         for daily_data in data:
             daily_dist = []
             for level in daily_data['dist']:
                 daily_dist.append(level[keyword])
             dist.append(daily_dist)
-        return dist
+        dist_array = np.array(dist)
+        new_axis = dist_array[np.newaxis, :]
+        return new_axis
 
     def set_all(self):
         self.set_parameters()
@@ -181,14 +183,14 @@ class stock_filter:
             trace_in_range
             last_day_total_shares = trace_in_range[-1]['total_shares']
             total_shares_1d_array.append(last_day_total_shares)
-            owners_dist_per_stock = self.get_pure_array_by_keyword(trace_in_range, 'owners')
-            percent_dist_per_stock = self.get_pure_array_by_keyword(trace_in_range, 'percent')
+            owners_dist_per_stock = self.get_pure_3d_array_by_keyword(trace_in_range, 'owners')
+            percent_dist_per_stock = self.get_pure_3d_array_by_keyword(trace_in_range, 'percent')
             owners_dist_3d_array.append(owners_dist_per_stock)
             percent_dist_3d_array.append(percent_dist_per_stock)
         logging.debug(percent_dist_3d_array)
         self.total_shares = np.array(total_shares_1d_array)
-        self.percent_dist = np.array(percent_dist_3d_array)
-        self.owners_dist = np.array(owners_dist_3d_array)
+        self.percent_dist = np.vstack(percent_dist_3d_array)
+        self.owners_dist = np.vstack(owners_dist_3d_array)
         return
 
     def get_all_stock_list(self):
