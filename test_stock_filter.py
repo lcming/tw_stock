@@ -3,6 +3,7 @@
 from stock_filter import stock_filter
 import unittest
 import logging
+import numpy as np
 
 class test_stock_filter(unittest.TestCase):
 
@@ -20,13 +21,15 @@ class test_stock_filter(unittest.TestCase):
         self.assertIn(3035, sf.stock_id_set)
         self.assertNotIn(3034, sf.stock_id_set)
 
-    def set_dist(self):
-        return
+    def test_set_all(self):
+        sf = self.build_sample_stock_filter()
+        for i in (sf.price, sf.foreign_diff,sf.total_shares, sf.owners_dist, sf.percent_dist):
+            self.assertEqual(np.size(i, 0), 2)
+        for i in (sf.price, sf.foreign_diff):
+            self.assertEqual(np.size(i, 1), 10)
 
-    def set_price(self):
-        return
+        sf.dbg()
 
-    def set_inst(self):
         return
 
     def test_get_all_stock_list(self):
@@ -38,6 +41,18 @@ class test_stock_filter(unittest.TestCase):
         self.assertIn(1605, stock_list)
         self.assertIn(2353, stock_list)
         self.assertIn(9945, stock_list)
+
+    def test_set_dist(self):
+        sf = stock_filter()
+        sf.stock_id_set = [3034, 3035]
+        sf.test_mode = 1
+        sf.days_traced = 10
+        sf.set_dist()
+        for i in (sf.percent_dist, sf.owners_dist):
+            self.assertEqual(np.size(i, 0), 2)
+            self.assertEqual(np.size(i[0], 0), 2)
+            self.assertEqual(np.size(i[1], 0), 2)
+            self.assertEqual(np.size(i[1], 1), 15)
 
 if __name__ == '__main__':
     logging.basicConfig(filename='test_stock_filter.log', level=logging.DEBUG)

@@ -170,14 +170,14 @@ class stock_filter:
         total_shares_1d_array = []
         owners_dist_3d_array = []
         percent_dist_3d_array = []
-        weeks_traced = self.days_traced / 7 + 1
+        weeks_traced = int(self.days_traced / 7 + 1)
         for stock_id in self.stock_id_set:
             ds = dist_scrap(stock_id, weeks_traced)
             if(self.test_mode):
                 ds.set_today(self.y, self.m, self.d )
             ds.set_data()
             ds.dbg()
-            trace_in_range = self.get_sorted_data_in_range(ds.data, self.days_traced)
+            trace_in_range = self.get_sorted_data_in_range(ds.data, weeks_traced)
             trace_in_range
             last_day_total_shares = trace_in_range[-1]['total_shares']
             total_shares_1d_array.append(last_day_total_shares)
@@ -185,15 +185,21 @@ class stock_filter:
             percent_dist_per_stock = self.get_pure_array_by_keyword(trace_in_range, 'percent')
             owners_dist_3d_array.append(owners_dist_per_stock)
             percent_dist_3d_array.append(percent_dist_per_stock)
+        logging.debug(percent_dist_3d_array)
         self.total_shares = np.array(total_shares_1d_array)
         self.percent_dist = np.array(percent_dist_3d_array)
         self.owners_dist = np.array(owners_dist_3d_array)
         return
 
     def get_all_stock_list(self):
+        import time
         url = 'http://www.twse.com.tw/fund/T86?response=json&selectType=ALL&date=20171201'
-        rsp = urllib.request.urlopen(url)
+        request = urllib.request.Request(url, headers = {'User-Agent' :\
+                            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2227.0 Safari/537.36"})
+        rsp = urllib.request.urlopen(request)
         html_str = rsp.read().decode('utf8')
+        logging.debug("html_str")
+        logging.debug(html_str)
         raw_data = eval(html_str)
         data_part = raw_data['data']
         all_stock_list = []

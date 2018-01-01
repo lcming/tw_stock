@@ -1,7 +1,7 @@
 #!/bin/sh
+commit=1
 if [ "$#" -ne 1 ]; then
-  echo "Usage: $0 <commit message>"
-    exit 1
+    commit=0
 fi
 msg=$1
 echo $msg
@@ -14,7 +14,7 @@ do
     fi
 done
 
-if [ "$fail_tests" = "" ]; then
+if [ "$fail_tests" = "" ] && [ "$commit" -eq 1 ] ; then
     git commit -a -m "$msg"
     git push
 else
