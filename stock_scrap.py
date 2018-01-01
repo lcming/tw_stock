@@ -14,6 +14,7 @@ class stock_scrap:
     record_dates = []
     cache_data = {}
     data = {}
+    min_new_data_range = 0
 
     # dbg
     hit_count = 0
@@ -80,13 +81,14 @@ class stock_scrap:
     def get_html_str(self, url):
         import time
         logging.debug(url)
-        time.sleep(4)
+        time.sleep(1)
         try:
             rsp = urllib.request.urlopen(url)
             html_str = rsp.read().decode('utf8')
         except UnicodeDecodeError:
             rsp = urllib.request.urlopen(url)
             html_str = rsp.read().decode('big5')
+        time.sleep(1)
         return html_str
 
     def load_cache_data(self):
@@ -113,16 +115,18 @@ class stock_scrap:
         d = self.today
 
         self.load_cache_data()
+        new_data_range = 0
 
         while (days_traced < self.trace_len):
             date = self.get_date_string(d)
-            if(date in self.data):
+            if(date in self.data and new_data_range >= self.min_new_data_range):
                 self.hit_count += 1
                 if(self.data[date]):
                     days_traced += 1
             else:
                 logging.info("Cache miss on %s" % date)
                 self.set_daily_info(date)
+                new_data_range += 1
                 try:
                     if(self.data[date]):
                         self.record_dates.append(date)
