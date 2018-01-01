@@ -7,7 +7,7 @@ from price_scrap import price_scrap
 import unittest
 import logging
 
-class test_dist_scrap(unittest.TestCase):
+class test_stock_filter(unittest.TestCase):
 
     def build_sample_stock_filter(self):
         sf = stock_filter()
