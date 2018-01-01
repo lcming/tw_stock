@@ -194,16 +194,17 @@ class stock_filter:
         return
 
     def get_all_stock_list(self):
-        import time
+        ss = stock_scrap("", "", "")
         url = 'http://www.twse.com.tw/fund/T86?response=json&selectType=ALL&date=20171201'
-        request = urllib.request.Request(url, headers = {'User-Agent' :\
-                            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2227.0 Safari/537.36"})
-        rsp = urllib.request.urlopen(request)
-        html_str = rsp.read().decode('utf8')
-        logging.debug("html_str")
-        logging.debug(html_str)
-        raw_data = eval(html_str)
-        data_part = raw_data['data']
+        data_part = None
+        while(data_part is None):
+            try:
+                html_str = ss.get_html_str(url)
+                raw_data = eval(html_str)
+                data_part = raw_data['data']
+            except KeyError:
+                logging.info("retry...")
+                pass
         all_stock_list = []
         for stock in  data_part:
             stock_id = stock[0]

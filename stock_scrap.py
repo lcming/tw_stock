@@ -69,26 +69,22 @@ class stock_scrap:
         pat = re.compile('((?=[^\.])\D)')
         number = pat.sub("", number)
         return float(number)
-    def url_to_cache_path(self, url):
-        import re
-        pat = re.compile(':\/\/')
-        filename = pat.sub("/", url)
-        cache_dir = "./cache"
-        full_name = cache_dir + "/" + filename
-        return full_name
 
-    @retry(urllib.error.URLError)
+    #@retry(urllib.error.URLError)
     def get_html_str(self, url):
         import time
-        logging.debug(url)
-        time.sleep(1)
         try:
-            rsp = urllib.request.urlopen(url)
-            html_str = rsp.read().decode('utf8')
+            time.sleep(2)
+            req = urllib.request.Request(url, headers = {'User-Agent' : "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2227.0 Safari/537.36"})
+            logging.debug(url)
+            rsp = urllib.request.urlopen(req)
+            read_data = rsp.read()
+            html_str = read_data.decode('utf8')
+            time.sleep(2)
         except UnicodeDecodeError:
-            rsp = urllib.request.urlopen(url)
-            html_str = rsp.read().decode('big5')
-        time.sleep(1)
+            html_str = read_data.decode('big5')
+        except urllib.error.URLError:
+            html_str = self.get_html_str(url)
         return html_str
 
     def load_cache_data(self):

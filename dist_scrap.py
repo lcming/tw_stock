@@ -31,6 +31,7 @@ class dist_scrap(stock_scrap):
         html_str = self.get_html_str(self.format_url(date))
         root = etree.HTML(html_str)
         table_rows = root.xpath("//table[@class='mt']/tbody/tr[position()>1]")
+        alert_msg = root.xpath('//script[contains(text(),"alert")]')
         if(table_rows):
             for row in table_rows:
                 idx = row[0].text
@@ -51,10 +52,16 @@ class dist_scrap(stock_scrap):
             daily_info["dist"] = day_dist
             daily_info["total_owners"] = total_owners
             daily_info["total_shares"] = total_shares
+            self.data[date] = daily_info
+        elif (alert_msg):
+            logging.info("No trade on %s" % date)
+            self.data[date] = None
         else:
-            daily_info = None
+            # retry
+            logging.info("Retry on %s" % date)
+            self.set_daily_info(date)
+            return
 
-        self.data[date] = daily_info
 
 
     def format_url(self, date):
