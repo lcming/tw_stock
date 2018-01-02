@@ -23,7 +23,6 @@ class test_inst_scrap(unittest.TestCase):
         inss = inst_scrap("3035", 22)
         inss.set_today(2017, 11, 30)
         inss.set_data()
-        self.assertEqual(inss.data["20171031"]['foreign_buy'], 671000)
         self.assertEqual(inss.data["20171101"]['dealer_buy_hedge'], 125000)
         self.assertEqual(inss.data["20171129"]['total_diff'], 5041000)
         self.assertEqual(inss.data["20171130"]['invest_buy'], 173000)
