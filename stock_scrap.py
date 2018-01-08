@@ -68,7 +68,12 @@ class stock_scrap:
         import re
         pat = re.compile('((?=[^\.])\D)')
         number = pat.sub("", number)
-        return float(number)
+        try:
+            return float(number)
+        except:
+            logging.error("fatal converting %s" % number)
+
+
 
     #@retry(urllib.error.URLError)
     def get_html_str(self, url):
