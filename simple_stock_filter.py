@@ -143,21 +143,28 @@ class simple_stock_filter:
 
         self.stock_list = new_list
 
-    def price_now(self, price_max, price_min):
+    def price_now(self, price_max, price_min, inc_weeks, target_inc_percent):
         new_list = []
-        recent_trade_day = None
         for st in self.stock_list:
-            ps = price_scrap(str(st), 1)
+            recent_trade_day = None
+            first_trade_day = None
+            days_traced = 5 * inc_weeks + 1
+            ps = price_scrap(str(st), days_traced)
             if(self.test_mode):
                 ps.set_today(2018, 1, 5)
             ps.set_data()
-            if(recent_trade_day == None):
-                for i in reversed(sorted(ps.data)):
-                    if(ps.data[i]):
-                        recent_trade_day = i
-                        break
+            for i in reversed(sorted(ps.data)):
+                if(ps.data[i]):
+                    recent_trade_day = i
+                    break
+            for i in sorted(ps.data):
+                if(ps.data[i]):
+                    first_trade_day = i
+                    break
             price_now = ps.data[recent_trade_day]
-            if(price_now <= price_max and price_now >= price_min):
+            price_before = ps.data[first_trade_day]
+            price_inc = (price_now - price_before) / price_before
+            if(price_now <= price_max and price_now >= price_min and price_inc < target_inc_percent):
                 logging.debug("%s - %f $" %(st, price_now))
                 new_list.append(st)
         self.stock_list = new_list

@@ -11,7 +11,9 @@ class test_simple(unittest.TestCase):
         ss = simple_stock_filter()
         ss.test_mode = 1
         ss.set_all_stock_list()
-        ss.price_now(10, 8)
+        ss.stock_list = self.test_set
+        ss.price_now(10, 8, 3, 0.0)
+        self.assertEqual(ss.stock_list, ['1618', '3047', '2363'])
 
     def test_foreign_percent(self):
         ss = simple_stock_filter()
