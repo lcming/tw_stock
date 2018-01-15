@@ -10,10 +10,14 @@ class foreign_scrap(inst_scrap):
         self.url = 'http://www.twse.com.tw/fund/MI_QFIIS?response=json&_=1515166188118&selectType=ALLBUT0999&'
 
     def set_daily_info(self, date):
+        sgt_cache_name =  "./cache/" + self.__class__.__name__ + date + ".txt"
         url = self.format_url(date)
+        cache_web = self.load_cache_web(sgt_cache_name, url)
         try:
-            raw_data = eval(self.get_html_str(url))
+            raw_data = eval(cache_web)
         except SyntaxError:
+            logging.debug("eval cache web syntax error, retry...")
+            self.inval_cache_web(sgt_cache_name)
             self.set_daily_info(date)
             return
         stat = raw_data['stat']
@@ -25,11 +29,12 @@ class foreign_scrap(inst_scrap):
                 i = 7
             # ['stock_id', 'name', 'global_id', 'total_shares', 'allow_shares', 'forein_shares', 'allow_percent', 'foreign_percent']
             #       0          1          2            3                4              5                 6                7
-                daily_info = float(data_part[idx][i])
+                daily_info = self.get_pure_float(data_part[idx][i])
             else:
                 logging.info("No trade on %s" % date)
                 daily_info = None
         elif (stat == '很抱歉，目前線上人數過多，請您稍候再試'):
+            self.inval_cache_web(sgt_cache_name)
             self.set_daily_info(date)
             return
         else:

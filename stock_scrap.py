@@ -5,6 +5,7 @@ from retry import retry
 from pprint import pformat as pf
 import logging
 import os
+import sys
 
 class stock_scrap:
     stock_id = None
@@ -54,6 +55,7 @@ class stock_scrap:
 
     def get_pure_int(self, number):
         import re
+        number = str(number)
         pat = re.compile('^\s*-')
         negtive = pat.match(number)
         pat = re.compile('\..*')
@@ -66,12 +68,14 @@ class stock_scrap:
             return int(number)
     def get_pure_float(self, number):
         import re
-        pat = re.compile('((?=[^\.])\D)')
-        number = pat.sub("", number)
         try:
+            number = str(number)
+            pat = re.compile('((?=[^\.])\D)')
+            number = pat.sub("", number)
             return float(number)
         except:
             logging.error("fatal converting %s" % number)
+            sys.exit(1)
 
 
 
@@ -91,6 +95,31 @@ class stock_scrap:
         except urllib.error.URLError:
             html_str = self.get_html_str(url)
         return html_str
+
+    def load_cache_web(self, fname, url):
+        try:
+            with open(fname, 'r', encoding='utf-8') as infile:
+                cache_web = infile.read()
+                infile.close()
+                logging.info("web cache %s hit" % fname)
+        except (FileNotFoundError) as e:
+            logging.info("web cache %s miss, request URL" % fname)
+            try:
+                cache_web = self.get_html_str(url)
+                self.fill_cache_web(fname, cache_web)
+            except SyntaxError:
+                cache_web = self.load_cache_web(date, url)
+        return cache_web
+
+    def fill_cache_web(self, fname, cache_web):
+        with open(fname, 'w', encoding='utf-8') as outfile:
+            logging.info("store cache web")
+            outfile.write(str(cache_web))
+            outfile.close()
+
+    def inval_cache_web(self, fname):
+        os.remove(fname)
+
 
     def load_cache_data(self):
         try:

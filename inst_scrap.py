@@ -41,9 +41,11 @@ class inst_scrap(price_scrap):
     #TODO: retry with differnt strategy based on "很抱歉，沒有符合條件的資料!" or "幕前人數過多"
     def set_daily_info(self, date):
         daily_info = {}
+        sgt_cache_name =  "./cache/" + self.__class__.__name__ + date + ".txt"
         url = self.format_url(date)
+        cache_web = self.load_cache_web(sgt_cache_name, url)
         try:
-            raw_data = eval(self.get_html_str(url))
+            raw_data = eval(cache_web)
         except SyntaxError:
             self.set_daily_info(date)
             return
@@ -60,6 +62,7 @@ class inst_scrap(price_scrap):
                     pp(data_part)
                     sys.exit(0)
         elif (stat == '很抱歉，目前線上人數過多，請您稍候再試'):
+            self.inval_cache_web(sgt_cache_name)
             self.set_daily_info(date)
             return
         elif (stat == '很抱歉，沒有符合條件的資料!'):
