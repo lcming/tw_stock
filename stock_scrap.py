@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import datetime
 import urllib.request
+import ssl
 from retry import retry
 from pprint import pformat as pf
 import logging
@@ -55,27 +56,33 @@ class stock_scrap:
 
     def get_pure_int(self, number):
         import re
-        number = str(number)
-        pat = re.compile('^\s*-')
-        negtive = pat.match(number)
-        pat = re.compile('\..*')
-        number = pat.sub("", number)
-        pat = re.compile('\D')
-        number = pat.sub("", number)
-        if(negtive):
-            return -int(number)
-        else:
-            return int(number)
+        number_old = number
+        try:
+            number = str(number)
+            pat = re.compile('^\s*-')
+            negtive = pat.match(number)
+            pat = re.compile('\..*')
+            number = pat.sub("", number)
+            pat = re.compile('\D')
+            number = pat.sub("", number)
+            if(negtive):
+                return -int(number)
+            else:
+                return int(number)
+        except:
+            logging.warn("failed converting int %s" % number_old)
+            return None
     def get_pure_float(self, number):
         import re
+        number_old = number
         try:
             number = str(number)
             pat = re.compile('((?=[^\.])\D)')
             number = pat.sub("", number)
             return float(number)
         except:
-            logging.error("fatal converting %s" % number)
-            sys.exit(1)
+            logging.error("failed converting float %s" % number_old)
+            return None
 
 
 
@@ -92,7 +99,7 @@ class stock_scrap:
             time.sleep(2)
         except UnicodeDecodeError:
             html_str = read_data.decode('big5')
-        except urllib.error.URLError:
+        except (urllib.error.URLError, ssl.SSLError) as e:
             html_str = self.get_html_str(url)
         return html_str
 

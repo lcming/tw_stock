@@ -15,9 +15,30 @@ class test_inst_scrap(unittest.TestCase):
         inss.set_today(2017, 11, 30)
         inss.set_data()
         inss.dbg()
-        self.assertEqual(inss.data['20171020'], {'deal_shares': 9898172, 'high': 46.25, 'low': 44.5, 'open': 45.2})
+        self.assertEqual(inss.data['20171020'],
+                {'deal_shares': 9898172,
+                    'high': 46.25,
+                    'low': 44.5, 'open': 45.2,
+                    'close': 45.55,
+                    'deal_count': 4610.0,
+                    'deal_shares': 9898172,
+                    'deal_value': 451462858.0,
+                    'high': 46.25,
+                    'low': 44.5,
+                    'open': 45.2})
         self.assertEqual(inss.data['20171021'], None)
-        self.assertEqual(inss.data['20171130'], {'deal_shares': 23490382, 'high': 67.8, 'low': 61.4, 'open': 62.5})
+        self.assertEqual(inss.data['20171130'], {
+            'deal_shares': 23490382,
+            'high': 67.8,
+            'low': 61.4,
+            'open': 62.5,
+            'close': 63.9,
+            'deal_count': 13798.0,
+            'deal_shares': 23490382,
+            'deal_value': 1508599976.0,
+            'high': 67.8,
+            'low': 61.4,
+            'open': 62.5})
 
 if __name__ == '__main__':
     logging.basicConfig(filename='test_close_scrap.log', level=logging.DEBUG)

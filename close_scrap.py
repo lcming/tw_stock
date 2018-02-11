@@ -28,10 +28,10 @@ class close_scrap(foreign_scrap):
             idx = self.get_stock_id_idx(data_part, self.stock_id)
             if (idx >= 0):
                 #data_base_key = ['stock_id', 'name', 'deal_shares', 'deal_count', 'deal_value', 'open', 'high', 'low', 'close']
-                for i in range(5, 8):
+                for i in range(2, 9):
                     key = self.data_base_key[i]
                     daily_info[key] = self.get_pure_float(data_part[idx][i])
-
+                        #logging.warn("empty %s data <$s> for $d" % (key, str(data_part[idx][i]), self.stock_id))
                 i = 2
                 key = self.data_base_key[i]
                 daily_info[key] = self.get_pure_int(data_part[idx][i])
