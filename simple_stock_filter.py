@@ -23,14 +23,23 @@ class simple_stock_filter:
     test_mode = 0
     stock_list = []
 
-    def run_filter(self, p_inc, f_inc, b_inc):
+    def __init__(self, volume_min = 100000, price_min = 5.0, price_max = 200.0, traced_weeks = 2):
+        self.volume_min = volume_min
+        self.price_min = price_min
+        self.price_max = price_max
+        self.traced_weeks = traced_weeks
+
+    def run_viz(self, traced_weeks):
+        pass
+
+    def run_filter(self, p_inc, f_inc, b_inc, f_tshd, b_tshd):
         self.set_all_stock_list()
-        self.volume_now(100000)
-        self.price_now(100.0, 5.0, 2, p_inc)
-        self.foreign_percent( 10.0, 2, f_inc)
-        #def foreign_percent(self, target_percent, inc_weeks, target_inc_percent):
-        self.big_owner_percent(14, 50, 2, b_inc)
-        #def big_owner_percent(self, level, target_percent, inc_weeks, target_inc_percent):
+        self.volume_now()
+        self.price_window_inc_below(p_inc)
+        self.foreign_inc_over(f_tshd, f_inc)
+        #def foreign_inc_over(self, target_percent, target_inc_percent):
+        self.big_inc_over(14, b_tshd, b_inc)
+        #def big_inc_over(self, level, target_percent, target_inc_percent):
         return self.stock_list
 
     def dict_to_list(self, dict_in, reverse):
@@ -58,34 +67,33 @@ class simple_stock_filter:
         return ret_list
 
 
-    def big_owner_percent(self, level, target_percent, inc_weeks, target_inc_percent):
+    def big_inc_over(self, level, target_percent, target_inc_percent):
         new_list = []
-        weeks_trace= inc_weeks + 1
+        weeks_traced = self.traced_weeks + 1
         for st in self.stock_list:
-            ss = dist_scrap(str(st), weeks_trace)
+            ss = dist_scrap(str(st), weeks_traced)
             if(self.test_mode):
                 ss.set_today(2018, 1, 5)
             ss.set_data()
-            big_percent_list = self.dict_list_item_to_list(ss.data, 1, level)
             week = 0
             ok = 1
             prev_percent = None
             most_recent_percent = None
-            while(week < weeks_trace):
+            for date in ss.record_dates:
                 try:
-                    percent = big_percent_list[week]
+                    percent = ss.data[date]['dist'][level]['percent']
                     if(prev_percent == None):
                         logging.debug("starting big owner percent %f" % percent)
                         most_recent_percent = percent
                         if(most_recent_percent < target_percent):
-                            logging.info("%s is out, %f < target: %f" %(st, most_recent_percent, target_percent))
+                            logging.info("%s is out on %s, %f < target: %f" %(st, date, most_recent_percent, target_percent))
                             ok = 0
                             break
                     elif(prev_percent < percent):
                         ok = 0
-                        logging.info("%s is out, %f -> %f" %(st, prev_percent, percent))
+                        logging.info("%s is out on %s, %f -> %f" %(st, date, prev_percent, percent))
                         break
-                    logging.info("%s: %f" %(st, percent))
+                    logging.info("%s on %s: %f" %(st, date, percent))
                     prev_percent = percent
                     week += 1
                 except IndexError:
@@ -103,37 +111,43 @@ class simple_stock_filter:
 
         self.stock_list = new_list
 
+    def sample_list(self, list_in, rate):
+        list_out = []
+        i = 0
+        while(i < len(list_in)):
+            list_out.append(list_in[i])
+            i += rate
+        return list_out
 
-    def foreign_percent(self, target_percent, inc_weeks, target_inc_percent):
+    def foreign_inc_over(self, target_percent, target_inc_percent):
         new_list = []
-        days_traced = inc_weeks * 5 + 1
+        days_traced = self.traced_weeks * 5 + 1
         for st in self.stock_list:
             ss = foreign_scrap(str(st), days_traced)
             if(self.test_mode):
                 ss.set_today(2018, 1, 5)
             ss.set_data()
             foreign_percent_list = self.dict_to_list(ss.data, 1)
-            day = 0
             ok = 1
             prev_percent = None
             most_recent_percent = None
-            while(day < days_traced):
+            sample_dates = self.sample_list(ss.record_dates, 5)
+            for date in sample_dates:
                 try:
-                    percent = foreign_percent_list[day]
+                    percent = ss.data[date]
                     if(prev_percent == None):
                         logging.debug("starting foreign percent %f" % percent)
                         most_recent_percent = percent
                         if(most_recent_percent < target_percent):
-                            logging.info("%s is out, %f < target: %f" %(st, most_recent_percent, target_percent))
+                            logging.info("%s is out on %s, %f < target: %f" %(st, date, most_recent_percent, target_percent))
                             ok = 0
                             break
                     elif(prev_percent < percent):
                         ok = 0
-                        logging.info("%s is out, %f -> %f" %(st, prev_percent, percent))
+                        logging.info("%s is out on %s, %f -> %f" %(st, date, prev_percent, percent))
                         break
-                    logging.info("%s: %f" %(st, percent))
+                    logging.info("%s on %s: %f" %(st, date, percent))
                     prev_percent = percent
-                    day += 5
                 except IndexError:
                     ss.dbg()
                     print("foreign_percent_list:")
@@ -150,7 +164,7 @@ class simple_stock_filter:
 
         self.stock_list = new_list
 
-    def volume_now(self, min_volume):
+    def volume_now(self):
         new_list = []
         for st in self.stock_list:
             ps = close_scrap(str(st), 1)
@@ -166,36 +180,30 @@ class simple_stock_filter:
                 logging.error("no valid trade day found for %s" % st)
                 sys.exit(1)
             v = ps.data[recent_trade_day]['deal_shares']
-            if(v >= min_volume):
+            if(v >= self.min_volume):
                 logging.debug("%s pass minimum volume" % st)
                 new_list.append(st)
         self.stock_list = new_list
 
 
-    def price_now(self, price_max, price_min, inc_weeks, target_inc_percent):
+    def price_window_inc_below(self, target_inc_percent):
         new_list = []
         for st in self.stock_list:
             recent_trade_day = None
             first_trade_day = None
-            days_traced = 5 * inc_weeks + 1
+            days_traced = 5 * self.traced_weeks + 1
             ps = price_scrap(str(st), days_traced)
             if(self.test_mode):
                 ps.set_today(2018, 1, 5)
             ps.set_data()
-            for i in reversed(sorted(ps.data)):
-                if(ps.data[i]):
-                    recent_trade_day = i
-                    break
-            for i in sorted(ps.data):
-                if(ps.data[i]):
-                    first_trade_day = i
-                    break
-            price_now = ps.data[recent_trade_day]
-            price_before = ps.data[first_trade_day]
+            price_now = ps.data[ps.record_dates[0]]
+            price_before = ps.data[ps.record_dates[-1]]
             price_inc = (price_now - price_before) / price_before * 100
-            if(price_now <= price_max and price_now >= price_min and price_inc < target_inc_percent):
+            if(price_now <= self.price_max and price_now >= self.price_min and price_inc < target_inc_percent):
                 logging.debug("%s - %f $" %(st, price_now))
                 new_list.append(st)
+            else:
+                logging.debug("%s is out - %f $" %(st, price_now))
         self.stock_list = new_list
 
     def set_all_stock_list(self):
@@ -222,13 +230,23 @@ class simple_stock_filter:
 
 if __name__ == "__main__":
     logging.basicConfig(filename='ssf.log', level=logging.DEBUG)
-    for i in range(1, 11):
-        ssf = simple_stock_filter()
+    for i in range(1, 1):
+
+        volume_min = 100000
+        price_min = 5.0
+        price_max = 200.0
+        traced_weeks = 2
+
         inc = i * 0.25
         b_inc = inc
         f_inc = inc * 0.5
         pri_i = inc
-        ssf.run_filter(pri_i, f_inc, b_inc)
-        print("parameter = %d", i)
+        f_tshd = 10.0
+        b_tshd = 50.0
+
+        ssf = simple_stock_filter(volume_min, price_min, price_max, traced_weeks)
+        ssf.run_filter(pri_i, f_inc, b_inc, f_tshd, b_tshd)
+
+        print("parameter = %d" % i)
         print(ssf.stock_list)
 
