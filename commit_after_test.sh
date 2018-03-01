@@ -8,6 +8,7 @@ echo $msg
 fail_tests=""
 for testfile in `ls test*.py`
 do
+    echo "run $testfile"
     python3 $testfile
     if [ "$?" -ne 0 ]; then
         fail_tests=$(printf "$fail_tests\n$testfile")

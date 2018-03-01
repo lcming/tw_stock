@@ -12,6 +12,17 @@ class test_simple(unittest.TestCase):
     price_max = 200.0
     traced_weeks = 2
 
+    def test_inc(self):
+        ss = simple_stock_filter()
+        ss.test_mode = 1
+        stock = '2330'
+        p_inc = ss.get_price_inc(stock)
+        f_inc = ss.get_foreign_inc(stock)
+        b_inc = ss.get_big_inc(stock)
+        self.assertAlmostEqual(p_inc, 6.666666666666667)
+        self.assertAlmostEqual(f_inc, 0.19021049961958622)
+        self.assertAlmostEqual(b_inc, 0.0653167864141109)
+
     def test_set_all_stock_list(self):
         ss = simple_stock_filter()
         ss.set_all_stock_list()
@@ -31,7 +42,6 @@ class test_simple(unittest.TestCase):
         ss.stock_list = self.test_set
         ss.foreign_inc_over(10.0, 0.0)
         self.assertEqual(ss.stock_list, ['2890', '1806', '2889'])
-
 
     def test_big_inc_over(self):
         ss = simple_stock_filter()

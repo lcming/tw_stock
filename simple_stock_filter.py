@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from price_scrap import price_scrap
 from dist_scrap import dist_scrap
 from inst_scrap import inst_scrap
@@ -12,14 +13,12 @@ import logging
 import re
 import urllib.request
 import sys
+import matplotlib.pyplot as plt
 
 
 class simple_stock_filter:
 
     # dbg
-    y = 2018
-    m = 1
-    d = 6
     test_mode = 0
     stock_list = []
 
@@ -28,44 +27,120 @@ class simple_stock_filter:
         self.price_min = price_min
         self.price_max = price_max
         self.traced_weeks = traced_weeks
+        self.name_table = {}
 
-    def run_viz(self, traced_weeks):
-        pass
+    def get_foreign_inc(self, stock):
+        days_traced = self.traced_weeks * 5 + 1
+        ss = foreign_scrap(str(stock), days_traced)
+        if(self.test_mode):
+            ss.set_today(2018, 1, 5)
+        ss.set_data()
+        sample_dates = self.sample_list(ss.record_dates, 5)
+        start_date = sample_dates[-1]
+        end_date = sample_dates[0]
+        inc = (ss.data[end_date] - ss.data[start_date]) / ss.data[start_date]
+        return inc*100.0
+
+    def get_price_inc(self, stock):
+        days_traced = self.traced_weeks * 5 + 1
+        ss = price_scrap(str(stock), days_traced)
+        if(self.test_mode):
+            ss.set_today(2018, 1, 5)
+        ss.set_data()
+        sample_dates = self.sample_list(ss.record_dates, 5)
+        start_date = sample_dates[-1]
+        end_date = sample_dates[0]
+        inc = (ss.data[end_date] - ss.data[start_date]) / ss.data[start_date]
+        return inc*100.0
+
+
+    def get_big_level(self, stock):
+        level = 14
+        return level
+
+    def get_big_inc(self, stock):
+        level = self.get_big_level(stock)
+        weeks_traced = self.traced_weeks + 1
+        ss = dist_scrap(str(stock), weeks_traced)
+        if(self.test_mode):
+            ss.set_today(2018, 1, 5)
+        ss.set_data()
+        start_date = ss.record_dates[-1]
+        end_date = ss.record_dates[0]
+        inc = (ss.data[end_date]['dist'][level]['percent'] - ss.data[start_date]['dist'][level]['percent']) / ss.data[start_date]['dist'][level]['percent']
+        return inc*100.0
+
+    def update_bound(self, f_inc, b_inc, max_f, min_f, max_b, min_b):
+        if(f_inc > max_f):
+            max_f = f_inc
+        if(f_inc < min_f):
+            min_f = f_inc
+        if(b_inc > max_b):
+            max_b = b_inc
+        if(b_inc < min_b):
+            min_b = b_inc
+        return (max_f, min_f, max_b, min_b)
+
+    def get_plot_color(self, p_inc):
+        if(p_inc > 0):
+            if(p_inc > 10.0):
+                p_inc = 10.0
+            r, g, b= p_inc / 10.0, 0, 0
+        elif(p_inc <= 0):
+            if(p_inc < -10.0):
+                p_inc = -10.0
+            r, g, b = 0, -(p_inc / 10.0), 0
+        else:
+            r, g, b = 0, 0, 0
+
+        return (r, g, b)
+
+    def get_plot_text(self, stock, p_inc):
+        name = stock
+        sign = '+'
+        if(self.name_table[stock]):
+            name = self.name_table[stock]
+        if(p_inc < .0):
+            sign = '-'
+        text = name + sign + "{:.1f}".format(p_inc)
+        return text
+
+    def run_viz(self):
+        self.set_all_stock_list()
+        self.stock_list = ['2330', '2317', '2303']
+        self.volume_over()
+        max_b = float("-inf")
+        max_f = float("-inf")
+        min_b = float("inf")
+        min_f = float("inf")
+        plt.rcParams['font.sans-serif']=['simhei']
+        plt.rcParams['axes.unicode_minus']=False
+        plt.figure(figsize=(30,30), dpi=200)
+        for stock in self.stock_list:
+            p_inc = self.get_price_inc(stock)
+            f_inc = self.get_foreign_inc(stock)
+            b_inc = self.get_big_inc(stock)
+            max_f, min_f, max_b, min_b = self.update_bound(f_inc, b_inc, max_f, min_f, max_b, min_b)
+            r, g, b = self.get_plot_color(p_inc)
+            plot_text = self.get_plot_text(stock, p_inc)
+            plt.text(f_inc, b_inc, plot_text, fontsize=16, color=(r, g, b))
+            print(plot_text)
+            print("%s: %f, %f, %f" % (stock, f_inc, b_inc, p_inc))
+
+        plt.axis([min_f, max_f, min_b, max_b])
+        plt.savefig("plot.pdf", dpi=200)
+
+
 
     def run_filter(self, p_inc, f_inc, b_inc, f_tshd, b_tshd):
         self.set_all_stock_list()
-        self.volume_now()
+        self.volume_over()
         self.price_window_inc_below(p_inc)
         self.foreign_inc_over(f_tshd, f_inc)
         #def foreign_inc_over(self, target_percent, target_inc_percent):
         self.big_inc_over(14, b_tshd, b_inc)
         #def big_inc_over(self, level, target_percent, target_inc_percent):
         return self.stock_list
-
-    def dict_to_list(self, dict_in, reverse):
-        ret_list = []
-        if(reverse == 1):
-            for i in reversed(sorted(dict_in)):
-                if(dict_in[i]):
-                    ret_list.append(dict_in[i])
-        else:
-            for i in sorted(dict_in):
-                if(dict_in[i]):
-                    ret_list.append(dict_in[i])
-        return ret_list
-
-    def dict_list_item_to_list(self, dict_in, reverse, idx):
-        ret_list = []
-        if(reverse == 1):
-            for i in reversed(sorted(dict_in)):
-                if(dict_in[i]):
-                    ret_list.append(dict_in[i]['dist'][idx]['percent'])
-        else:
-            for i in sorted(dict_in):
-                if(dict_in[i]):
-                    ret_list.append(dict_in[i]['dist'][idx]['percent'])
-        return ret_list
-
 
     def big_inc_over(self, level, target_percent, target_inc_percent):
         new_list = []
@@ -127,7 +202,6 @@ class simple_stock_filter:
             if(self.test_mode):
                 ss.set_today(2018, 1, 5)
             ss.set_data()
-            foreign_percent_list = self.dict_to_list(ss.data, 1)
             ok = 1
             prev_percent = None
             most_recent_percent = None
@@ -150,8 +224,6 @@ class simple_stock_filter:
                     prev_percent = percent
                 except IndexError:
                     ss.dbg()
-                    print("foreign_percent_list:")
-                    print(foreign_percent_list)
                     sys.exit(1)
 
             inc_percent = (most_recent_percent - percent) / percent * 100.0
@@ -164,7 +236,7 @@ class simple_stock_filter:
 
         self.stock_list = new_list
 
-    def volume_now(self):
+    def volume_over(self):
         new_list = []
         for st in self.stock_list:
             ps = close_scrap(str(st), 1)
@@ -180,7 +252,7 @@ class simple_stock_filter:
                 logging.error("no valid trade day found for %s" % st)
                 sys.exit(1)
             v = ps.data[recent_trade_day]['deal_shares']
-            if(v >= self.min_volume):
+            if(v >= self.volume_min):
                 logging.debug("%s pass minimum volume" % st)
                 new_list.append(st)
         self.stock_list = new_list
@@ -221,32 +293,40 @@ class simple_stock_filter:
         all_stock_list = []
         for stock in  data_part:
             stock_id = stock[0]
+            stock_name = stock[1]
             pat = re.compile('^[1-9]\d{3}$')
             if(pat.match(stock_id)):
                 all_stock_list.append(stock_id)
+                self.name_table[stock_id] = stock_name.strip()
         logging.debug("all_stock_list: %s" % str(all_stock_list))
         self.stock_list = all_stock_list
 
 
 if __name__ == "__main__":
     logging.basicConfig(filename='ssf.log', level=logging.DEBUG)
-    for i in range(1, 1):
+    volume_min = 100000
+    price_min = 5.0
+    price_max = 200.0
+    traced_weeks = 1
+    ssf = simple_stock_filter(volume_min, price_min, price_max, traced_weeks)
+    ssf.run_viz()
+    #for i in range(1, 1):
 
-        volume_min = 100000
-        price_min = 5.0
-        price_max = 200.0
-        traced_weeks = 2
+    #    volume_min = 100000
+    #    price_min = 5.0
+    #    price_max = 200.0
+    #    traced_weeks = 2
 
-        inc = i * 0.25
-        b_inc = inc
-        f_inc = inc * 0.5
-        pri_i = inc
-        f_tshd = 10.0
-        b_tshd = 50.0
+    #    inc = i * 0.25
+    #    b_inc = inc
+    #    f_inc = inc * 0.5
+    #    pri_i = inc
+    #    f_tshd = 10.0
+    #    b_tshd = 50.0
 
-        ssf = simple_stock_filter(volume_min, price_min, price_max, traced_weeks)
-        ssf.run_filter(pri_i, f_inc, b_inc, f_tshd, b_tshd)
+    #    ssf = simple_stock_filter(volume_min, price_min, price_max, traced_weeks)
+    #    ssf.run_filter(pri_i, f_inc, b_inc, f_tshd, b_tshd)
 
-        print("parameter = %d" % i)
-        print(ssf.stock_list)
+    #    print("parameter = %d" % i)
+    #    print(ssf.stock_list)
 

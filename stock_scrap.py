@@ -90,13 +90,12 @@ class stock_scrap:
     def get_html_str(self, url):
         import time
         try:
-            time.sleep(3)
+            time.sleep(5)
             req = urllib.request.Request(url, headers = {'User-Agent' : "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2227.0 Safari/537.36"})
             logging.debug(url)
             rsp = urllib.request.urlopen(req)
             read_data = rsp.read()
             html_str = read_data.decode('utf8')
-            time.sleep(3)
         except UnicodeDecodeError:
             html_str = read_data.decode('big5')
         except (urllib.error.URLError, ssl.SSLError) as e:
