@@ -7,7 +7,10 @@ import logging
 
 class test_dist_scrap(unittest.TestCase):
 
-    def test_dist_scrap(self):
+    def test_set_valid_dates(self):
+        ds = dist_scrap("", 0)
+
+    def test_data(self):
         ds = dist_scrap("3035", 4)
         ds.set_today(2017, 11, 30)
         ds.set_data()

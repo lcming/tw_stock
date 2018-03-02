@@ -101,13 +101,14 @@ class simple_stock_filter:
         if(self.name_table[stock]):
             name = self.name_table[stock]
         if(p_inc < .0):
-            sign = '-'
+            sign = ''
         text = name + sign + "{:.1f}".format(p_inc)
         return text
 
     def run_viz(self):
         self.set_all_stock_list()
-        self.stock_list = ['2330', '2317', '2303']
+        if(self.test_mode):
+            self.stock_list = ['2330', '2317', '2303']
         self.volume_over()
         max_b = float("-inf")
         max_f = float("-inf")
@@ -115,7 +116,6 @@ class simple_stock_filter:
         min_f = float("inf")
         plt.rcParams['font.sans-serif']=['simhei']
         plt.rcParams['axes.unicode_minus']=False
-        plt.figure(figsize=(30,30), dpi=200)
         for stock in self.stock_list:
             p_inc = self.get_price_inc(stock)
             f_inc = self.get_foreign_inc(stock)
@@ -127,7 +127,7 @@ class simple_stock_filter:
             print(plot_text)
             print("%s: %f, %f, %f" % (stock, f_inc, b_inc, p_inc))
 
-        plt.axis([min_f, max_f, min_b, max_b])
+        plt.axis([max_f, min_f, max_b, min_b])
         plt.savefig("plot.pdf", dpi=200)
 
 

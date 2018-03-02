@@ -11,7 +11,14 @@ class dist_scrap(stock_scrap):
 
     def __init__(self, _stock_id, _trace_len):
         _url = 'https://www.tdcc.com.tw/smWeb/QryStock.jsp'
+        self.valid_dates = []
         super().__init__(_stock_id, _trace_len, _url)
+        self.set_valid_dates()
+
+    def set_valid_dates(self):
+        html_str = self.get_html_str(self.url)
+        root = etree.HTML(html_str)
+        self.valid_dates = root.xpath('//select/option/text()')
 
     def get_min_max(self, share_range):
         import re
@@ -24,6 +31,9 @@ class dist_scrap(stock_scrap):
         return matched
 
     def set_daily_info(self, date):
+        if(date not in self.valid_dates):
+            self.data[date] = None
+            return
         daily_info = {}
         day_dist = []
         max_level = 15
@@ -54,8 +64,7 @@ class dist_scrap(stock_scrap):
             daily_info["total_shares"] = total_shares
             self.data[date] = daily_info
         elif (alert_msg):
-            logging.info("No trade on %s" % date)
-            self.data[date] = None
+            logging.error("Should never request invalid date %s" % date)
         else:
             # retry
             logging.info("Retry on %s" % date)
