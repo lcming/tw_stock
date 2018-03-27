@@ -9,7 +9,7 @@ class test_dist_scrap(unittest.TestCase):
 
     def test_dist_scrap(self):
         ds = dist_scrap("3035", 4)
-        ds.set_today(2017, 11, 30)
+        ds.set_today(2017, 11, 24)
         ds.set_data()
         self.assertEqual(ds.data["20171124"]["total_owners"], 46282)
         self.assertEqual(ds.data["20171124"]["total_shares"], 248550313)

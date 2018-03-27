@@ -5,13 +5,16 @@ import logging
 import pprint
 import datetime
 from stock_scrap import stock_scrap
+from requests import Request, Session, exceptions
+from retry import retry
 
 class dist_scrap(stock_scrap):
     ranges = []
 
     def __init__(self, _stock_id, _trace_len):
-        _url = 'https://www.tdcc.com.tw/smWeb/QryStock.jsp'
+        _url = 'https://www.tdcc.com.tw/smWeb/QryStockAjax.do'
         super().__init__(_stock_id, _trace_len, _url)
+        self.valid_dates = self.get_valid_dates()
 
     def get_min_max(self, share_range):
         import re
@@ -23,16 +26,57 @@ class dist_scrap(stock_scrap):
             matched.append(None)
         return matched
 
+    def parsePOSTstring(self, POSTstr):
+        paramList = POSTstr.split('&')
+        paramDict = dict([param.split('=') for param in paramList])
+        return paramDict
+
+    def get_valid_dates(self):
+        POSTstr = "REQ_OPR=qrySelScaDates"
+        vd_str = self.get_ajax_str(POSTstr)
+        return(eval(vd_str))
+
+    def get_html_str(self, date):
+        POSTstr = "StockNo=" + self.stock_id + "&clkStockNo=" + self.stock_id + "&scaDate=" + date + "&StockName=&REQ_OPR=SELECT&clkStockName=&SqlMethod=StockNo"
+        html_str = self.get_ajax_str(POSTstr)
+        return html_str
+
+    def get_ajax_str(self, POSTstr):
+        import time
+        time.sleep(5)
+        try:
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:27.0) Gecko/20100101 Firefox/27.0',
+                'Referer' : 'https://www.tdcc.com.tw/smWeb/QryStockAjax.do'}
+            payload = self.parsePOSTstring(POSTstr)
+            s = Session()
+            r = s.post(self.url, data = payload, headers=headers)
+            ajax_str = r.text
+            s.close()
+        except exceptions.ConnectionError:
+            s.close()
+            ajax_str = self.get_ajax_str(POSTstr)
+        return ajax_str
+
+
+
     def set_daily_info(self, date):
+        if date not in self.valid_dates:
+            logging.info("No dist date select on %s" % date)
+            self.data[date] = None
+            return
         daily_info = {}
         day_dist = []
         max_level = 15
         cnt = 0
-        html_str = self.get_html_str(self.format_url(date))
+        html_str = self.get_html_str(date)
         root = etree.HTML(html_str)
-        table_rows = root.xpath("//table[@class='mt']/tbody/tr[position()>1]")
-        alert_msg = root.xpath('//script[contains(text(),"alert")]')
-        if(table_rows):
+        alert_msg = root.xpath('//font')
+        if(alert_msg):
+            logging.info("No dist info on %s" % date)
+            self.data[date] = None
+        else:
+            table_rows = root.xpath("//form/table/tr/td/table[position()=6]/tbody/tr[position()>1]")
             for row in table_rows:
                 idx = row[0].text
                 cnt += 1
@@ -53,14 +97,7 @@ class dist_scrap(stock_scrap):
             daily_info["total_owners"] = total_owners
             daily_info["total_shares"] = total_shares
             self.data[date] = daily_info
-        elif (alert_msg):
-            logging.info("No trade on %s" % date)
-            self.data[date] = None
-        else:
-            # retry
-            logging.info("Retry on %s" % date)
-            self.set_daily_info(date)
-            return
+        return
 
 
 
@@ -72,5 +109,5 @@ if __name__ == '__main__':
     pp = pprint.PrettyPrinter(indent=4)
     logging.basicConfig()
     url_base = 'https://www.tdcc.com.tw/smWeb/QryStock.jsp'
-    ds = dist_scrap("3035", 21, url_base)
+    #ds = dist_scrap("3035", 21, url_base)
     pp.pprint(ds.data)
