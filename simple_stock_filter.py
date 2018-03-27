@@ -21,6 +21,7 @@ class simple_stock_filter:
     # dbg
     test_mode = 0
     stock_list = []
+    black_list = ['9136']
 
     def __init__(self, volume_min = 100000, price_min = 5.0, price_max = 200.0, traced_weeks = 2):
         self.volume_min = volume_min
@@ -35,11 +36,15 @@ class simple_stock_filter:
         if(self.test_mode):
             ss.set_today(2018, 1, 5)
         ss.set_data()
-        sample_dates = self.sample_list(ss.record_dates, 5)
-        start_date = sample_dates[-1]
-        end_date = sample_dates[0]
-        inc = (ss.data[end_date] - ss.data[start_date]) / ss.data[start_date]
-        return inc*100.0
+        if(len(ss.record_dates) > 0):
+            sample_dates = self.sample_list(ss.record_dates, 5)
+            start_date = sample_dates[-1]
+            end_date = sample_dates[0]
+            inc = ss.data[end_date] - ss.data[start_date]
+            return inc
+        else:
+            logging.warn("No valid foreign data for %s" % stock)
+            return 0.0
 
     def get_price_inc(self, stock):
         days_traced = self.traced_weeks * 5 + 1
@@ -47,11 +52,15 @@ class simple_stock_filter:
         if(self.test_mode):
             ss.set_today(2018, 1, 5)
         ss.set_data()
-        sample_dates = self.sample_list(ss.record_dates, 5)
-        start_date = sample_dates[-1]
-        end_date = sample_dates[0]
-        inc = (ss.data[end_date] - ss.data[start_date]) / ss.data[start_date]
-        return inc*100.0
+        if(len(ss.record_dates) > 0):
+            sample_dates = self.sample_list(ss.record_dates, 5)
+            start_date = sample_dates[-1]
+            end_date = sample_dates[0]
+            inc = (ss.data[end_date] - ss.data[start_date]) / ss.data[start_date]
+            return inc*100.0
+        else:
+            logging.warn("No valid price data for %s" % stock)
+            return 0.0
 
 
     def get_big_level(self, stock):
@@ -65,10 +74,14 @@ class simple_stock_filter:
         if(self.test_mode):
             ss.set_today(2018, 1, 5)
         ss.set_data()
-        start_date = ss.record_dates[-1]
-        end_date = ss.record_dates[0]
-        inc = (ss.data[end_date]['dist'][level]['percent'] - ss.data[start_date]['dist'][level]['percent']) / ss.data[start_date]['dist'][level]['percent']
-        return inc*100.0
+        if(len(ss.record_dates) > 0):
+            start_date = ss.record_dates[-1]
+            end_date = ss.record_dates[0]
+            inc = (ss.data[end_date]['dist'][level]['percent'] - ss.data[start_date]['dist'][level]['percent'])
+            return inc
+        else:
+            logging.warn("No valid big owner data for %s" % stock)
+            return 0.0
 
     def update_bound(self, f_inc, b_inc, max_f, min_f, max_b, min_b):
         if(f_inc > max_f):
@@ -102,11 +115,12 @@ class simple_stock_filter:
             name = self.name_table[stock]
         if(p_inc < .0):
             sign = ''
-        text = name + sign + "{:.1f}".format(p_inc)
+        text = name #+ sign + "{:.1f}".format(p_inc)
         return text
 
     def run_viz(self):
         self.set_all_stock_list()
+        today_str = str(datetime.date.today())
         if(self.test_mode):
             self.stock_list = ['2330', '2317', '2303']
         self.volume_over()
@@ -116,6 +130,11 @@ class simple_stock_filter:
         min_f = float("inf")
         plt.rcParams['font.sans-serif']=['simhei']
         plt.rcParams['axes.unicode_minus']=False
+        fig, ax = plt.subplots()
+        fig.set_size_inches(20, 15, forward = True)
+        plt.title("近%d週外資大戶持股與股價變化(製表日:%s)" % (self.traced_weeks, today_str))
+        plt.xlabel("外資持股變化(%)")
+        plt.ylabel("千張大戶持股變化(%)")
         for stock in self.stock_list:
             p_inc = self.get_price_inc(stock)
             f_inc = self.get_foreign_inc(stock)
@@ -123,12 +142,12 @@ class simple_stock_filter:
             max_f, min_f, max_b, min_b = self.update_bound(f_inc, b_inc, max_f, min_f, max_b, min_b)
             r, g, b = self.get_plot_color(p_inc)
             plot_text = self.get_plot_text(stock, p_inc)
-            plt.text(f_inc, b_inc, plot_text, fontsize=16, color=(r, g, b))
+            plt.text(f_inc, b_inc, plot_text, fontsize=8, color=(r, g, b))
             print(plot_text)
             print("%s: %f, %f, %f" % (stock, f_inc, b_inc, p_inc))
 
         plt.axis([max_f, min_f, max_b, min_b])
-        plt.savefig("plot.pdf", dpi=200)
+        plt.savefig("%s 近%d週變化.pdf" % (today_str, self.traced_weeks), dpi=300)
 
 
 
@@ -299,6 +318,8 @@ class simple_stock_filter:
                 all_stock_list.append(stock_id)
                 self.name_table[stock_id] = stock_name.strip()
         logging.debug("all_stock_list: %s" % str(all_stock_list))
+        for st in self.black_list:
+            all_stock_list.remove(st)
         self.stock_list = all_stock_list
 
 
@@ -307,20 +328,21 @@ if __name__ == "__main__":
     volume_min = 100000
     price_min = 5.0
     price_max = 200.0
-    traced_weeks = 1
-    ssf = simple_stock_filter(volume_min, price_min, price_max, traced_weeks)
-    ssf.run_viz()
-    #for i in range(1, 1):
+    for i in [1, 2, 3, 4]:
+        traced_weeks = i
+        ssf = simple_stock_filter(volume_min, price_min, price_max, traced_weeks)
+        ssf.run_viz()
+    #for i in range(1, 11):
 
     #    volume_min = 100000
     #    price_min = 5.0
-    #    price_max = 200.0
+    #    price_max = 4000
     #    traced_weeks = 2
 
     #    inc = i * 0.25
     #    b_inc = inc
     #    f_inc = inc * 0.5
-    #    pri_i = inc
+    #    pri_i = inc * 2
     #    f_tshd = 10.0
     #    b_tshd = 50.0
 

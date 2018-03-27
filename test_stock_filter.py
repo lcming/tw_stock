@@ -57,4 +57,4 @@ class test_stock_filter(unittest.TestCase):
 
 if __name__ == '__main__':
     logging.basicConfig(filename='test_stock_filter.log', level=logging.DEBUG)
-    unittest.main()
+    #unittest.main()

@@ -20,8 +20,8 @@ class test_simple(unittest.TestCase):
         f_inc = ss.get_foreign_inc(stock)
         b_inc = ss.get_big_inc(stock)
         self.assertAlmostEqual(p_inc, 6.666666666666667)
-        self.assertAlmostEqual(f_inc, 0.19021049961958622)
-        self.assertAlmostEqual(b_inc, 0.0653167864141109)
+        self.assertAlmostEqual(f_inc, 0.15)
+        self.assertAlmostEqual(b_inc, 0.06)
 
     def test_set_all_stock_list(self):
         ss = simple_stock_filter()
