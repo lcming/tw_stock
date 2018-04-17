@@ -2,6 +2,7 @@
 
 from lxml import etree, html
 import logging
+import traceback
 import pprint
 import datetime
 from stock_scrap import stock_scrap
@@ -34,7 +35,8 @@ class dist_scrap(stock_scrap):
     def get_valid_dates(self):
         POSTstr = "REQ_OPR=qrySelScaDates"
         vd_str = self.get_ajax_str(POSTstr)
-        return(eval(vd_str))
+        d_list = eval(vd_str)
+        return(d_list)
 
     def get_html_str(self, date):
         POSTstr = "StockNo=" + self.stock_id + "&clkStockNo=" + self.stock_id + "&scaDate=" + date + "&StockName=&REQ_OPR=SELECT&clkStockName=&SqlMethod=StockNo"
@@ -70,13 +72,11 @@ class dist_scrap(stock_scrap):
         max_level = 15
         cnt = 0
         html_str = self.get_html_str(date)
+        print(html_str)
         root = etree.HTML(html_str)
         alert_msg = root.xpath('//font')
-        if(alert_msg):
-            logging.info("No dist info on %s" % date)
-            self.data[date] = None
-        else:
-            table_rows = root.xpath("//form/table/tr/td/table[position()=6]/tbody/tr[position()>1]")
+        try:
+            table_rows = root.xpath("//form/table/tr/td/table[position()=7]/tbody/tr[position()>1]")
             for row in table_rows:
                 idx = row[0].text
                 cnt += 1
@@ -97,6 +97,8 @@ class dist_scrap(stock_scrap):
             daily_info["total_owners"] = total_owners
             daily_info["total_shares"] = total_shares
             self.data[date] = daily_info
+        except Exception as e:
+            logging.error(traceback.format_exc())
         return
 
 
@@ -106,8 +108,7 @@ class dist_scrap(stock_scrap):
         return _url
 
 if __name__ == '__main__':
-    pp = pprint.PrettyPrinter(indent=4)
-    logging.basicConfig()
-    url_base = 'https://www.tdcc.com.tw/smWeb/QryStock.jsp'
+    ds = dist_scrap("3035", 1)
+    ds.set_today(2017, 11, 24)
+    ds.set_data()
     #ds = dist_scrap("3035", 21, url_base)
-    pp.pprint(ds.data)

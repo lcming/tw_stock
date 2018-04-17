@@ -151,24 +151,26 @@ class stock_scrap:
 
         self.load_cache_data()
 
-        while (days_traced < self.trace_len):
-            date = self.get_date_string(d)
-            if(date in self.data):
-                self.hit_count += 1
-                if(self.data[date]):
-                    self.record_dates.append(date)
-                    days_traced += 1
-            else:
-                logging.info("Cache miss on %s" % date)
-                self.set_daily_info(date)
-                try:
+        try:
+            while (days_traced < self.trace_len):
+                date = self.get_date_string(d)
+                if(date in self.data):
+                    self.hit_count += 1
                     if(self.data[date]):
                         self.record_dates.append(date)
                         days_traced += 1
-                except KeyError:
-                    self.data[date] = None
-            d -= datetime.timedelta(1)
-
+                else:
+                    logging.info("Cache miss on %s" % date)
+                    self.set_daily_info(date)
+                    try:
+                        if(self.data[date]):
+                            self.record_dates.append(date)
+                            days_traced += 1
+                    except KeyError:
+                        self.data[date] = None
+                d -= datetime.timedelta(1)
+        except OverflowError:
+            logging.error("overflow in %s" % self.stock_id)
         self.store_cache_data()
 
 

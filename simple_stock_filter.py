@@ -14,6 +14,9 @@ import re
 import urllib.request
 import sys
 import matplotlib.pyplot as plt
+from pylab import mpl
+mpl.rcParams['font.sans-serif'] = ['SimHei']
+
 
 
 class simple_stock_filter:
@@ -128,7 +131,7 @@ class simple_stock_filter:
         max_f = float("-inf")
         min_b = float("inf")
         min_f = float("inf")
-        plt.rcParams['font.sans-serif']=['simhei']
+        plt.rcParams['font.sans-serif'] = ['Microsoft JhengHei']
         plt.rcParams['axes.unicode_minus']=False
         fig, ax = plt.subplots()
         fig.set_size_inches(20, 15, forward = True)
@@ -328,8 +331,8 @@ if __name__ == "__main__":
     volume_min = 100000
     price_min = 5.0
     price_max = 200.0
-    for i in [1, 2, 3, 4]:
-        traced_weeks = i
+    for i in range(1):
+        traced_weeks = i + 1
         ssf = simple_stock_filter(volume_min, price_min, price_max, traced_weeks)
         ssf.run_viz()
     #for i in range(1, 11):
