@@ -18,6 +18,7 @@ class stock_scrap:
     data = {}
 
     # dbg
+    scratch_mode = 0
     hit_count = 0
 
     def __init__(self, _stock_id, _trace_len, _url):
@@ -27,7 +28,11 @@ class stock_scrap:
         self.url = _url
         self.record_dates.clear()
         self.data.clear()
-        self.cache_name =  "./cache/" + self.__class__.__name__+ str(_stock_id) + ".txt"
+        if self.scratch_mode == 1:
+            self.cache_dir = "./cache_scratch/"
+        else:
+            self.cache_dir = "./cache/"
+        self.cache_name = self.cache_dir + self.__class__.__name__+ str(_stock_id) + ".txt"
 
     def get_date_string(self, d):
         y_str = d.year

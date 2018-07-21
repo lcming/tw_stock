@@ -11,11 +11,14 @@ from retry import retry
 
 class dist_scrap(stock_scrap):
     ranges = []
+    valid_dates = []
 
     def __init__(self, _stock_id, _trace_len):
         _url = 'https://www.tdcc.com.tw/smWeb/QryStockAjax.do'
         super().__init__(_stock_id, _trace_len, _url)
-        self.valid_dates = self.get_valid_dates()
+        self.set_valid_dates()
+        self.retry_cnt = 0
+        self.none_cnt = 0
 
     def get_min_max(self, share_range):
         import re
@@ -32,11 +35,12 @@ class dist_scrap(stock_scrap):
         paramDict = dict([param.split('=') for param in paramList])
         return paramDict
 
-    def get_valid_dates(self):
-        POSTstr = "REQ_OPR=qrySelScaDates"
-        vd_str = self.get_ajax_str(POSTstr)
-        d_list = eval(vd_str)
-        return(d_list)
+    def set_valid_dates(self):
+        while len(dist_scrap.valid_dates) == 0:
+            logging.info("set valid dates for dist scrap")
+            POSTstr = "REQ_OPR=qrySelScaDates"
+            vd_str = self.get_ajax_str(POSTstr)
+            dist_scrap.valid_dates = eval(vd_str)
 
     def get_html_str(self, date):
         POSTstr = "StockNo=" + self.stock_id + "&clkStockNo=" + self.stock_id + "&scaDate=" + date + "&StockName=&REQ_OPR=SELECT&clkStockName=&SqlMethod=StockNo"
@@ -64,7 +68,6 @@ class dist_scrap(stock_scrap):
 
     def set_daily_info(self, date):
         if date not in self.valid_dates:
-            logging.info("No dist date select on %s" % date)
             self.data[date] = None
             return
         daily_info = {}
@@ -72,7 +75,6 @@ class dist_scrap(stock_scrap):
         max_level = 15
         cnt = 0
         html_str = self.get_html_str(date)
-        print(html_str)
         root = etree.HTML(html_str)
         alert_msg = root.xpath('//font')
         try:
@@ -97,8 +99,12 @@ class dist_scrap(stock_scrap):
             daily_info["total_owners"] = total_owners
             daily_info["total_shares"] = total_shares
             self.data[date] = daily_info
-        except Exception as e:
+        except (IndexError, Exception) as e:
             logging.error(traceback.format_exc())
+            logging.fatal("cannot parse the page %s" % html_str)
+            if self.retry_cnt < 10:
+                self.retry_cnt += 1
+                self.set_daily_info(date)
         return
 
 

@@ -1,16 +1,15 @@
 #!/usr/bin/python3
 from inst_scrap import inst_scrap
+from stock_scrap import stock_scrap
 import unittest
-import datetime
 import logging
-import sys
-import os
+import os, glob
 
 
 class test_inst_scrap(unittest.TestCase):
-    fix_year = 2017
-    fix_month = 12
-    fix_day = 1
+    fix_year = 2018
+    fix_month = 4
+    fix_day = 20
 
     def test_format_url(self):
         inss = inst_scrap("2303", 3)
@@ -19,49 +18,23 @@ class test_inst_scrap(unittest.TestCase):
         self.assertNotEqual(inss.format_url("20161001"), ex_url)
 
 
-    def test_set_data(self):
-        inss = inst_scrap("3035", 22)
-        inss.set_today(2017, 11, 30)
+    def test_data(self):
+        inss = inst_scrap("3035", 6)
+        inss.set_today(self.fix_year, self.fix_month, self.fix_day)
         inss.set_data()
-        self.assertEqual(inss.data["20171101"]['dealer_buy_hedge'], 125000)
-        self.assertEqual(inss.data["20171129"]['total_diff'], 5041000)
-        self.assertEqual(inss.data["20171130"]['invest_buy'], 173000)
+        self.assertEqual(inss.data["20180420"]['dealer_buy_hedge'], 55000)
+        self.assertEqual(inss.data["20180419"]['total_diff'], 1741000)
+        self.assertEqual(inss.data["20180418"]['invest_buy'], 0)
+        self.assertAlmostEqual(inss.data["20180417"]['invest_diff_percent'], 0.0002011665139202621 )
+        self.assertEqual(inss.data["20180416"]['foreign_diff'], 536000)
+        self.assertIsNone(inss.data["20180415"])
 
-    def test_cache_data(self):
-        tmp_cache_name = "tmp_cache_for_test.txt"
-        if(os.path.isfile(tmp_cache_name)):
-            os.remove(tmp_cache_name)
-
-        inss = inst_scrap("3035", 10)
-        inss.set_today(2017, 11, 30)
-        if('flush' in os.environ):
-            inss.cache_name = tmp_cache_name
-        inss.set_data()
-
-        inss = inst_scrap("3035", 10)
-        inss.set_today(2017, 12, 1)
-        if('flush' in os.environ):
-            inss.cache_name = tmp_cache_name
-        inss.set_data()
-
-        if('flush' in os.environ):
-            # 9 hits on valid trade, 2 hits on no trade
-            self.assertEqual(inss.hit_count, 11)
-        self.assertEqual(inss.data['20171201']['foreign_diff'], -731200)
-        self.assertEqual(inss.data['20171130']['foreign_diff'], 2443000)
-        self.assertEqual(inss.data['20171117']['foreign_diff'], -1448000)
-        self.assertEqual(inss.data['20171118'], None)
-
-    #def test_get_stock_id_idx(self):
-    #    inss = inst_scrap("2330", 3)
-    #    ex_url = 'http://www.twse.com.tw/fund/T86?response=json&selectType=ALL&date=20171201'
-    #    raw_data = eval(inss.get_html_str(ex_url))
-    #    data_part = raw_data['data']
-    #    self.assertEqual(inss.get_stock_id_idx(data_part, "00632R"), 0)
-    #    self.assertEqual(inss.get_stock_id_idx(data_part, "2882"), 1)
-    #    self.assertEqual(inss.get_stock_id_idx(data_part, "2891"), 2)
-    #    self.assertEqual(inss.get_stock_id_idx(data_part, "00637L"), 8886)
-
+    def test_data_scratch(self):
+        files = glob.glob('./cache_scratch/*')
+        for f in files:
+            os.remove(f)
+        stock_scrap.scratch_mode = 1
+        self.test_data()
 
 if __name__ == '__main__':
     logging.basicConfig(filename='test_inst_scrap.log', level=logging.DEBUG)

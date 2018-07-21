@@ -2,11 +2,10 @@
 from price_scrap import price_scrap
 from stock_scrap import stock_scrap
 import unittest
-import datetime
 import logging
-import os
+import os, glob
 
-class test_dist_scrap(unittest.TestCase):
+class test_price_scrap(unittest.TestCase):
     fix_year = 2017
     fix_month = 11
     fix_day = 30
@@ -22,7 +21,7 @@ class test_dist_scrap(unittest.TestCase):
         self.assertNotEqual(ps.format_url("20161001"), ex_url)
 
 
-    def test_set_data(self):
+    def test_data(self):
         ps = price_scrap("3035", 22)
         ps.set_today(2017, 11, 30)
         ps.set_data()
@@ -32,34 +31,12 @@ class test_dist_scrap(unittest.TestCase):
         self.assertIn("20171101", ps.data)
         self.assertNotIn("20171001", ps.data)
 
-    def test_cache_data(self):
-        tmp_cache_name = "tmp_cache_for_test.txt"
-        if(os.path.isfile(tmp_cache_name)):
-            os.remove(tmp_cache_name)
-
-        ps = price_scrap("3035", 10)
-        ps.set_today(2017, 11, 30)
-        if('flush' in os.environ):
-            ps.cache_name = tmp_cache_name
-        ps.set_data()
-        ps.dbg()
-
-        ps = price_scrap("3035", 10)
-        ps.set_today(2017, 12, 1)
-        if('flush' in os.environ):
-            ps.cache_name = tmp_cache_name
-        ps.set_data()
-        ps.dbg()
-
-        if('flush' in os.environ):
-            # 9 hits on valid trade, 2 hits on no trade
-            self.assertEqual(ps.hit_count, 11)
-        self.assertAlmostEqual(ps.data['20171201'], 61.3)
-        self.assertAlmostEqual(ps.data['20171130'], 63.9)
-        self.assertAlmostEqual(ps.data['20171129'], 63.0)
-        self.assertAlmostEqual(ps.data['20171128'], 57.3)
-        self.assertAlmostEqual(ps.data['20171127'], 58.4)
-        self.assertEqual(ps.data['20171126'], None)
+    def test_data_scratch(self):
+        files = glob.glob('./cache_scratch/*')
+        for f in files:
+            os.remove(f)
+        stock_scrap.scratch_mode = 1
+        self.test_data()
 
 if __name__ == '__main__':
     logging.basicConfig(filename='test_price_scrap.log', level=logging.DEBUG)

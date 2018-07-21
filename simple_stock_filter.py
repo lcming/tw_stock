@@ -33,6 +33,22 @@ class simple_stock_filter:
         self.traced_weeks = traced_weeks
         self.name_table = {}
 
+    def get_inst_inc(self, stock):
+        days_traced = self.traced_weeks * 5 + 1
+        ss = inst_scrap(str(stock), days_traced)
+        if(self.test_mode):
+            ss.set_today(2018, 1, 5)
+        ss.set_data()
+        if(len(ss.record_dates) > 0):
+            sum = 0.0
+            for d in ss.record_dates:
+                inc = ss.data[d]['invest_diff_percent']
+                sum += inc
+            return sum*100
+        else:
+            logging.warn("No valid foreign data for %s" % stock)
+            return 0.0
+
     def get_foreign_inc(self, stock):
         days_traced = self.traced_weeks * 5 + 1
         ss = foreign_scrap(str(stock), days_traced)
@@ -65,13 +81,7 @@ class simple_stock_filter:
             logging.warn("No valid price data for %s" % stock)
             return 0.0
 
-
-    def get_big_level(self, stock):
-        level = 14
-        return level
-
     def get_big_inc(self, stock):
-        level = self.get_big_level(stock)
         weeks_traced = self.traced_weeks + 1
         ss = dist_scrap(str(stock), weeks_traced)
         if(self.test_mode):
@@ -80,7 +90,17 @@ class simple_stock_filter:
         if(len(ss.record_dates) > 0):
             start_date = ss.record_dates[-1]
             end_date = ss.record_dates[0]
-            inc = (ss.data[end_date]['dist'][level]['percent'] - ss.data[start_date]['dist'][level]['percent'])
+            threshold = 0.5
+            inc = 0.0
+            for level in [14, 13, 12, 11]:
+                inc_segment = ss.data[end_date]['dist'][level]['percent'] - ss.data[start_date]['dist'][level]['percent']
+                inc_segment_next = ss.data[end_date]['dist'][level-1]['percent'] - ss.data[start_date]['dist'][level-1]['percent']
+                inc += inc_segment
+                if abs(inc) > threshold:
+                    break
+                if inc_segment * inc_segment_next < 0:
+                    # if next level goes to the opposite, we only use this elvel
+                    break
             return inc
         else:
             logging.warn("No valid big owner data for %s" % stock)
@@ -121,7 +141,7 @@ class simple_stock_filter:
         text = name #+ sign + "{:.1f}".format(p_inc)
         return text
 
-    def run_viz(self):
+    def run_viz_foreign_big(self):
         self.set_all_stock_list()
         today_str = str(datetime.date.today())
         if(self.test_mode):
@@ -137,7 +157,7 @@ class simple_stock_filter:
         fig.set_size_inches(20, 15, forward = True)
         plt.title("近%d週外資大戶持股與股價變化(製表日:%s)" % (self.traced_weeks, today_str))
         plt.xlabel("外資持股變化(%)")
-        plt.ylabel("千張大戶持股變化(%)")
+        plt.ylabel("大戶持股變化(%)")
         for stock in self.stock_list:
             p_inc = self.get_price_inc(stock)
             f_inc = self.get_foreign_inc(stock)
@@ -150,19 +170,38 @@ class simple_stock_filter:
             print("%s: %f, %f, %f" % (stock, f_inc, b_inc, p_inc))
 
         plt.axis([max_f, min_f, max_b, min_b])
-        plt.savefig("%s 近%d週變化.pdf" % (today_str, self.traced_weeks), dpi=300)
+        plt.savefig("%s 近%d週外資大戶持股變化.pdf" % (today_str, self.traced_weeks), dpi=300)
 
-
-
-    def run_filter(self, p_inc, f_inc, b_inc, f_tshd, b_tshd):
+    def run_viz_inst_big(self):
         self.set_all_stock_list()
+        today_str = str(datetime.date.today())
+        if(self.test_mode):
+            self.stock_list = ['2330', '2317', '2303']
         self.volume_over()
-        self.price_window_inc_below(p_inc)
-        self.foreign_inc_over(f_tshd, f_inc)
-        #def foreign_inc_over(self, target_percent, target_inc_percent):
-        self.big_inc_over(14, b_tshd, b_inc)
-        #def big_inc_over(self, level, target_percent, target_inc_percent):
-        return self.stock_list
+        max_b = float("-inf")
+        max_f = float("-inf")
+        min_b = float("inf")
+        min_f = float("inf")
+        plt.rcParams['font.sans-serif'] = ['Microsoft JhengHei']
+        plt.rcParams['axes.unicode_minus']=False
+        fig, ax = plt.subplots()
+        fig.set_size_inches(20, 15, forward = True)
+        plt.title("近%d週投信大戶持股與股價變化(製表日:%s)" % (self.traced_weeks, today_str))
+        plt.xlabel("投信持股變化(%)")
+        plt.ylabel("大戶持股變化(%)")
+        for stock in self.stock_list:
+            p_inc = self.get_price_inc(stock)
+            f_inc = self.get_inst_inc(stock)
+            b_inc = self.get_big_inc(stock)
+            max_f, min_f, max_b, min_b = self.update_bound(f_inc, b_inc, max_f, min_f, max_b, min_b)
+            r, g, b = self.get_plot_color(p_inc)
+            plot_text = self.get_plot_text(stock, p_inc)
+            plt.text(f_inc, b_inc, plot_text, fontsize=8, color=(r, g, b))
+            print(plot_text)
+            print("%s: %f, %f, %f" % (stock, f_inc, b_inc, p_inc))
+
+        plt.axis([max_f, min_f, max_b, min_b])
+        plt.savefig("%s 近%d週投信大戶持股變化.pdf" % (today_str, self.traced_weeks), dpi=300)
 
     def big_inc_over(self, level, target_percent, target_inc_percent):
         new_list = []
@@ -331,27 +370,9 @@ if __name__ == "__main__":
     volume_min = 100000
     price_min = 5.0
     price_max = 200.0
-    for i in range(1):
+    for i in range(4):
         traced_weeks = i + 1
         ssf = simple_stock_filter(volume_min, price_min, price_max, traced_weeks)
-        ssf.run_viz()
-    #for i in range(1, 11):
-
-    #    volume_min = 100000
-    #    price_min = 5.0
-    #    price_max = 4000
-    #    traced_weeks = 2
-
-    #    inc = i * 0.25
-    #    b_inc = inc
-    #    f_inc = inc * 0.5
-    #    pri_i = inc * 2
-    #    f_tshd = 10.0
-    #    b_tshd = 50.0
-
-    #    ssf = simple_stock_filter(volume_min, price_min, price_max, traced_weeks)
-    #    ssf.run_filter(pri_i, f_inc, b_inc, f_tshd, b_tshd)
-
-    #    print("parameter = %d" % i)
-    #    print(ssf.stock_list)
+        ssf.run_viz_foreign_big()
+        ssf.run_viz_inst_big()
 
