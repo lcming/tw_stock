@@ -14,8 +14,8 @@ import re
 import urllib.request
 import sys
 import matplotlib.pyplot as plt
-from pylab import mpl
-mpl.rcParams['font.sans-serif'] = ['SimHei']
+#from pylab import mpl
+#mpl.rcParams['font.sans-serif'] = ['msjh']
 
 
 
@@ -26,12 +26,13 @@ class simple_stock_filter:
     stock_list = []
     black_list = ['9136']
 
-    def __init__(self, volume_min = 100000, price_min = 5.0, price_max = 200.0, traced_weeks = 2):
+    def __init__(self, volume_min = 100000, price_min = 5.0, price_max = 200.0, traced_weeks = 2, waived_list = []):
         self.volume_min = volume_min
         self.price_min = price_min
         self.price_max = price_max
         self.traced_weeks = traced_weeks
         self.name_table = {}
+        self.waived_list = waived_list
 
     def get_inst_inc(self, stock):
         days_traced = self.traced_weeks * 5 + 1
@@ -141,18 +142,23 @@ class simple_stock_filter:
         text = name #+ sign + "{:.1f}".format(p_inc)
         return text
 
+    def waive(self):
+        for w in self.waived_list:
+            self.stock_list.remove(w)
+
     def run_viz_foreign_big(self):
         self.set_all_stock_list()
         today_str = str(datetime.date.today())
         if(self.test_mode):
             self.stock_list = ['2330', '2317', '2303']
         self.volume_over()
+        self.waive()
         max_b = float("-inf")
         max_f = float("-inf")
         min_b = float("inf")
         min_f = float("inf")
         plt.rcParams['font.sans-serif'] = ['Microsoft JhengHei']
-        plt.rcParams['axes.unicode_minus']=False
+        plt.rcParams['axes.unicode_minus'] = False
         fig, ax = plt.subplots()
         fig.set_size_inches(20, 15, forward = True)
         plt.title("近%d週外資大戶持股與股價變化(製表日:%s)" % (self.traced_weeks, today_str))
@@ -178,6 +184,7 @@ class simple_stock_filter:
         if(self.test_mode):
             self.stock_list = ['2330', '2317', '2303']
         self.volume_over()
+        self.waive()
         max_b = float("-inf")
         max_f = float("-inf")
         min_b = float("inf")
@@ -369,10 +376,11 @@ if __name__ == "__main__":
     logging.basicConfig(filename='ssf.log', level=logging.DEBUG)
     volume_min = 100000
     price_min = 5.0
-    price_max = 200.0
-    for i in range(4):
+    price_max = 5000.0
+    waived_list = ['2614']
+    for i in range(1):
         traced_weeks = i + 1
-        ssf = simple_stock_filter(volume_min, price_min, price_max, traced_weeks)
+        ssf = simple_stock_filter(volume_min, price_min, price_max, traced_weeks, waived_list)
         ssf.run_viz_foreign_big()
         ssf.run_viz_inst_big()
 
