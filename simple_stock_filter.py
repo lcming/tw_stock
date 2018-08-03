@@ -34,11 +34,12 @@ class simple_stock_filter:
         self.name_table = {}
         self.waived_list = waived_list
 
-    def get_inst_inc(self, stock):
-        days_traced = self.traced_weeks * 5 + 1
+    def get_inst_inc(self, stock, days_traced):
         ss = inst_scrap(str(stock), days_traced)
         if(self.test_mode):
             ss.set_today(2018, 1, 5)
+        #if days_traced == 1:
+        #    ss.set_today()
         ss.set_data()
         if(len(ss.record_dates) > 0):
             sum = 0.0
@@ -50,14 +51,19 @@ class simple_stock_filter:
             logging.warn("No valid foreign data for %s" % stock)
             return 0.0
 
-    def get_foreign_inc(self, stock):
-        days_traced = self.traced_weeks * 5 + 1
+    def get_foreign_inc(self, stock, days_traced):
         ss = foreign_scrap(str(stock), days_traced)
         if(self.test_mode):
             ss.set_today(2018, 1, 5)
+        #if days_traced == 2:
+        #    ss.set_today()
         ss.set_data()
         if(len(ss.record_dates) > 0):
-            sample_dates = self.sample_list(ss.record_dates, 5)
+            if len(ss.record_dates)>5:
+                rate = 5
+            else:
+                rate = 1
+            sample_dates = self.sample_list(ss.record_dates, rate)
             start_date = sample_dates[-1]
             end_date = sample_dates[0]
             inc = ss.data[end_date] - ss.data[start_date]
@@ -66,14 +72,19 @@ class simple_stock_filter:
             logging.warn("No valid foreign data for %s" % stock)
             return 0.0
 
-    def get_price_inc(self, stock):
-        days_traced = self.traced_weeks * 5 + 1
+    def get_price_inc(self, stock, days_traced):
         ss = price_scrap(str(stock), days_traced)
-        if(self.test_mode):
+        if self.test_mode:
             ss.set_today(2018, 1, 5)
+        #if days_traced == 2:
+        #    ss.set_today()
         ss.set_data()
         if(len(ss.record_dates) > 0):
-            sample_dates = self.sample_list(ss.record_dates, 5)
+            if len(ss.record_dates)>5:
+                rate = 5
+            else:
+                rate = 1
+            sample_dates = self.sample_list(ss.record_dates, rate)
             start_date = sample_dates[-1]
             end_date = sample_dates[0]
             inc = (ss.data[end_date] - ss.data[start_date]) / ss.data[start_date]
@@ -82,8 +93,7 @@ class simple_stock_filter:
             logging.warn("No valid price data for %s" % stock)
             return 0.0
 
-    def get_big_inc(self, stock):
-        weeks_traced = self.traced_weeks + 1
+    def get_big_inc(self, stock, weeks_traced):
         ss = dist_scrap(str(stock), weeks_traced)
         if(self.test_mode):
             ss.set_today(2018, 1, 5)
@@ -144,7 +154,8 @@ class simple_stock_filter:
 
     def waive(self):
         for w in self.waived_list:
-            self.stock_list.remove(w)
+            if w in self.stock_list:
+                self.stock_list.remove(w)
 
     def run_viz_foreign_big(self):
         self.set_all_stock_list()
@@ -157,7 +168,7 @@ class simple_stock_filter:
         max_f = float("-inf")
         min_b = float("inf")
         min_f = float("inf")
-        plt.rcParams['font.sans-serif'] = ['Microsoft JhengHei']
+        #plt.rcParams['font.sans-serif'] = ['Microsoft JhengHei']
         plt.rcParams['axes.unicode_minus'] = False
         fig, ax = plt.subplots()
         fig.set_size_inches(20, 15, forward = True)
@@ -165,9 +176,11 @@ class simple_stock_filter:
         plt.xlabel("外資持股變化(%)")
         plt.ylabel("大戶持股變化(%)")
         for stock in self.stock_list:
-            p_inc = self.get_price_inc(stock)
-            f_inc = self.get_foreign_inc(stock)
-            b_inc = self.get_big_inc(stock)
+            days_traced = self.traced_weeks * 5 + 1
+            weeks_traced = self.traced_weeks + 1
+            p_inc = self.get_price_inc(stock, days_traced)
+            f_inc = self.get_foreign_inc(stock, days_traced)
+            b_inc = self.get_big_inc(stock, weeks_traced)
             max_f, min_f, max_b, min_b = self.update_bound(f_inc, b_inc, max_f, min_f, max_b, min_b)
             r, g, b = self.get_plot_color(p_inc)
             plot_text = self.get_plot_text(stock, p_inc)
@@ -189,7 +202,7 @@ class simple_stock_filter:
         max_f = float("-inf")
         min_b = float("inf")
         min_f = float("inf")
-        plt.rcParams['font.sans-serif'] = ['Microsoft JhengHei']
+        #plt.rcParams['font.sans-serif'] = ['Microsoft JhengHei']
         plt.rcParams['axes.unicode_minus']=False
         fig, ax = plt.subplots()
         fig.set_size_inches(20, 15, forward = True)
@@ -197,9 +210,11 @@ class simple_stock_filter:
         plt.xlabel("投信持股變化(%)")
         plt.ylabel("大戶持股變化(%)")
         for stock in self.stock_list:
-            p_inc = self.get_price_inc(stock)
-            f_inc = self.get_inst_inc(stock)
-            b_inc = self.get_big_inc(stock)
+            days_traced = self.traced_weeks * 5 + 1
+            weeks_traced = self.traced_weeks + 1
+            p_inc = self.get_price_inc(stock, days_traced)
+            f_inc = self.get_inst_inc(stock, days_traced)
+            b_inc = self.get_big_inc(stock, weeks_traced)
             max_f, min_f, max_b, min_b = self.update_bound(f_inc, b_inc, max_f, min_f, max_b, min_b)
             r, g, b = self.get_plot_color(p_inc)
             plot_text = self.get_plot_text(stock, p_inc)
@@ -209,6 +224,39 @@ class simple_stock_filter:
 
         plt.axis([max_f, min_f, max_b, min_b])
         plt.savefig("%s 近%d週投信大戶持股變化.pdf" % (today_str, self.traced_weeks), dpi=300)
+
+    def run_daily_viz_foreign_inst(self):
+        self.set_all_stock_list()
+        today_str = str(datetime.date.today())
+        if(self.test_mode):
+            self.stock_list = ['2330', '2317', '2303']
+        self.volume_over()
+        self.waive()
+        max_b = float("-inf")
+        max_f = float("-inf")
+        min_b = float("inf")
+        min_f = float("inf")
+        #plt.rcParams['font.sans-serif'] = ['Microsoft JhengHei']
+        plt.rcParams['axes.unicode_minus'] = False
+        fig, ax = plt.subplots()
+        fig.set_size_inches(20, 15, forward = True)
+        plt.title("外資投信持股與股價變化(製表日:%s)" % today_str)
+        plt.xlabel("外資持股變化(%)")
+        plt.ylabel("投信持股變化(%)")
+        for stock in self.stock_list:
+            days_traced = 1
+            p_inc = self.get_price_inc(stock, days_traced+1)
+            f_inc = self.get_foreign_inc(stock, days_traced+1)
+            i_inc = self.get_inst_inc(stock, days_traced)
+            max_f, min_f, max_b, min_b = self.update_bound(f_inc, i_inc, max_f, min_f, max_b, min_b)
+            r, g, b = self.get_plot_color(p_inc)
+            plot_text = self.get_plot_text(stock, p_inc)
+            plt.text(f_inc, i_inc, plot_text, fontsize=8, color=(r, g, b))
+            print(plot_text)
+            print("%s: %f, %f, %f" % (stock, f_inc, i_inc, p_inc))
+
+        plt.axis([max_f, min_f, max_b, min_b])
+        plt.savefig("%s外資投信持股變化.pdf" % today_str, dpi=300)
 
     def big_inc_over(self, level, target_percent, target_inc_percent):
         new_list = []
@@ -377,8 +425,8 @@ if __name__ == "__main__":
     volume_min = 100000
     price_min = 5.0
     price_max = 5000.0
-    waived_list = ['2614']
-    for i in range(1):
+    waived_list = ['2614', '2208']
+    for i in range(4):
         traced_weeks = i + 1
         ssf = simple_stock_filter(volume_min, price_min, price_max, traced_weeks, waived_list)
         ssf.run_viz_foreign_big()

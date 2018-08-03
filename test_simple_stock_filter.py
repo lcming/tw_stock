@@ -16,10 +16,12 @@ class test_simple(unittest.TestCase):
         ss = simple_stock_filter()
         ss.test_mode = 1
         stock = '2330'
-        p_inc = ss.get_price_inc(stock)
-        f_inc = ss.get_foreign_inc(stock)
-        i_inc = ss.get_inst_inc(stock)
-        b_inc = ss.get_big_inc(stock)
+        days_traced = self.traced_weeks * 5 + 1
+        weeks_traced = self.traced_weeks + 1
+        p_inc = ss.get_price_inc(stock, days_traced)
+        f_inc = ss.get_foreign_inc(stock, days_traced)
+        i_inc = ss.get_inst_inc(stock, days_traced)
+        b_inc = ss.get_big_inc(stock, weeks_traced)
         self.assertAlmostEqual(p_inc, 6.666666666666667)
         self.assertAlmostEqual(f_inc, 0.15)
         self.assertAlmostEqual(b_inc, 0.06)
