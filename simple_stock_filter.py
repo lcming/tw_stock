@@ -38,8 +38,8 @@ class simple_stock_filter:
         ss = inst_scrap(str(stock), days_traced)
         if(self.test_mode):
             ss.set_today(2018, 1, 5)
-        #if days_traced == 1:
-        #    ss.set_today()
+        if days_traced == 1:
+            ss.set_today()
         ss.set_data()
         if(len(ss.record_dates) > 0):
             sum = 0.0
@@ -55,8 +55,8 @@ class simple_stock_filter:
         ss = foreign_scrap(str(stock), days_traced)
         if(self.test_mode):
             ss.set_today(2018, 1, 5)
-        #if days_traced == 2:
-        #    ss.set_today()
+        if days_traced == 2:
+            ss.set_today()
         ss.set_data()
         if(len(ss.record_dates) > 0):
             if len(ss.record_dates)>5:
@@ -76,8 +76,8 @@ class simple_stock_filter:
         ss = price_scrap(str(stock), days_traced)
         if self.test_mode:
             ss.set_today(2018, 1, 5)
-        #if days_traced == 2:
-        #    ss.set_today()
+        if days_traced == 2:
+            ss.set_today()
         ss.set_data()
         if(len(ss.record_dates) > 0):
             if len(ss.record_dates)>5:
@@ -189,7 +189,7 @@ class simple_stock_filter:
             print("%s: %f, %f, %f" % (stock, f_inc, b_inc, p_inc))
 
         plt.axis([max_f, min_f, max_b, min_b])
-        plt.savefig("%s 近%d週外資大戶持股變化.pdf" % (today_str, self.traced_weeks), dpi=300)
+        plt.savefig("./weekly_plot/%s 近%d週外資大戶持股變化.pdf" % (today_str, self.traced_weeks), dpi=300)
 
     def run_viz_inst_big(self):
         self.set_all_stock_list()
@@ -223,7 +223,7 @@ class simple_stock_filter:
             print("%s: %f, %f, %f" % (stock, f_inc, b_inc, p_inc))
 
         plt.axis([max_f, min_f, max_b, min_b])
-        plt.savefig("%s 近%d週投信大戶持股變化.pdf" % (today_str, self.traced_weeks), dpi=300)
+        plt.savefig("./weekly_plot/%s 近%d週投信大戶持股變化.pdf" % (today_str, self.traced_weeks), dpi=300)
 
     def run_daily_viz_foreign_inst(self):
         self.set_all_stock_list()
@@ -256,7 +256,7 @@ class simple_stock_filter:
             print("%s: %f, %f, %f" % (stock, f_inc, i_inc, p_inc))
 
         plt.axis([max_f, min_f, max_b, min_b])
-        plt.savefig("%s外資投信持股變化.pdf" % today_str, dpi=300)
+        plt.savefig("./daily_plot/%s外資投信持股變化.pdf" % today_str, dpi=300)
 
     def big_inc_over(self, level, target_percent, target_inc_percent):
         new_list = []
