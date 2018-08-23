@@ -22,7 +22,7 @@ class stock_scrap:
     hit_count = 0
 
     def __init__(self, _stock_id, _trace_len, _url):
-        self.today = datetime.date.today() - datetime.timedelta(1)
+        self.today = self._get_today()
         self.stock_id = _stock_id
         self.trace_len = _trace_len
         self.url = _url
@@ -33,6 +33,12 @@ class stock_scrap:
         else:
             self.cache_dir = "./cache/"
         self.cache_name = self.cache_dir + self.__class__.__name__+ str(_stock_id) + ".txt"
+
+    def _get_today(self):
+        if int(datetime.datetime.now().hour) < 18:
+            return datetime.date.today() - datetime.timedelta(1)
+        else:
+            return datetime.date.today()
 
     def get_date_string(self, d):
         y_str = d.year
@@ -158,8 +164,11 @@ class stock_scrap:
         d = self.today
 
         self.load_cache_data()
+        self.set_data_failed = False
 
         try:
+            b2b_no_trade = 0
+            max_b2b_no_trade = 10
             while (days_traced < self.trace_len):
                 date = self.get_date_string(d)
                 if(date in self.data):
@@ -167,15 +176,21 @@ class stock_scrap:
                     if(self.data[date]):
                         self.record_dates.append(date)
                         days_traced += 1
+                        b2b_no_trade = 0
                 else:
                     logging.info("Cache miss on %s" % date)
                     self.set_daily_info(date)
-                    try:
-                        if(self.data[date]):
-                            self.record_dates.append(date)
-                            days_traced += 1
-                    except KeyError:
+                    if(self.data[date]):
+                        self.record_dates.append(date)
+                        days_traced += 1
+                        b2b_no_trade = 0
+                    else:
                         self.data[date] = None
+                        b2b_no_trade += 1
+                    if b2b_no_trade > max_b2b_no_trade:
+                        logging.info("give up %s" % self.stock_id)
+                        self.set_data_failed = True
+                        break
                 d -= datetime.timedelta(1)
         except OverflowError:
             logging.error("overflow in %s" % self.stock_id)

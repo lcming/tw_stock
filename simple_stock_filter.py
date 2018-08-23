@@ -24,7 +24,6 @@ class simple_stock_filter:
     # dbg
     test_mode = 0
     stock_list = []
-    black_list = ['9136']
 
     def __init__(self, volume_min = 100000, price_min = 5.0, price_max = 200.0, traced_weeks = 2, waived_list = []):
         self.volume_min = volume_min
@@ -38,8 +37,6 @@ class simple_stock_filter:
         ss = inst_scrap(str(stock), days_traced)
         if(self.test_mode):
             ss.set_today(2018, 1, 5)
-        if days_traced == 1:
-            ss.set_today()
         ss.set_data()
         if(len(ss.record_dates) > 0):
             sum = 0.0
@@ -53,11 +50,12 @@ class simple_stock_filter:
 
     def get_foreign_inc(self, stock, days_traced):
         ss = foreign_scrap(str(stock), days_traced)
+        logging.info("handle %s" % str(stock))
         if(self.test_mode):
             ss.set_today(2018, 1, 5)
-        if days_traced == 2:
-            ss.set_today()
         ss.set_data()
+        if ss.set_data_failed:
+            return 0.0
         if(len(ss.record_dates) > 0):
             if len(ss.record_dates)>5:
                 rate = 5
@@ -76,14 +74,13 @@ class simple_stock_filter:
         ss = price_scrap(str(stock), days_traced)
         if self.test_mode:
             ss.set_today(2018, 1, 5)
-        if days_traced == 2:
-            ss.set_today()
         ss.set_data()
         if(len(ss.record_dates) > 0):
             if len(ss.record_dates)>5:
                 rate = 5
             else:
                 rate = 1
+            print(ss.record_dates)
             sample_dates = self.sample_list(ss.record_dates, rate)
             start_date = sample_dates[-1]
             end_date = sample_dates[0]
@@ -175,6 +172,7 @@ class simple_stock_filter:
         plt.title("近%d週外資大戶持股與股價變化(製表日:%s)" % (self.traced_weeks, today_str))
         plt.xlabel("外資持股變化(%)")
         plt.ylabel("大戶持股變化(%)")
+        cnt = 1
         for stock in self.stock_list:
             days_traced = self.traced_weeks * 5 + 1
             weeks_traced = self.traced_weeks + 1
@@ -186,10 +184,12 @@ class simple_stock_filter:
             plot_text = self.get_plot_text(stock, p_inc)
             plt.text(f_inc, b_inc, plot_text, fontsize=8, color=(r, g, b))
             print(plot_text)
-            print("%s: %f, %f, %f" % (stock, f_inc, b_inc, p_inc))
+            print("%s: %f, %f, %f (%d of %d)" % (stock, f_inc, b_inc, p_inc, cnt, len(self.stock_list)))
+            cnt += 1
 
         plt.axis([max_f, min_f, max_b, min_b])
         plt.savefig("./weekly_plot/%s 近%d週外資大戶持股變化.pdf" % (today_str, self.traced_weeks), dpi=300)
+        plt.savefig("/mnt/c/Users/cm995/Desktop/plot_data/weekly_plot/%s 近%d週外資大戶持股變化.pdf" % (today_str, self.traced_weeks), dpi=300)
 
     def run_viz_inst_big(self):
         self.set_all_stock_list()
@@ -209,6 +209,7 @@ class simple_stock_filter:
         plt.title("近%d週投信大戶持股與股價變化(製表日:%s)" % (self.traced_weeks, today_str))
         plt.xlabel("投信持股變化(%)")
         plt.ylabel("大戶持股變化(%)")
+        cnt = 1
         for stock in self.stock_list:
             days_traced = self.traced_weeks * 5 + 1
             weeks_traced = self.traced_weeks + 1
@@ -220,10 +221,12 @@ class simple_stock_filter:
             plot_text = self.get_plot_text(stock, p_inc)
             plt.text(f_inc, b_inc, plot_text, fontsize=8, color=(r, g, b))
             print(plot_text)
-            print("%s: %f, %f, %f" % (stock, f_inc, b_inc, p_inc))
+            print("%s: %f, %f, %f (%d of %d)" % (stock, f_inc, b_inc, p_inc, cnt, len(self.stock_list)))
+            cnt += 1
 
         plt.axis([max_f, min_f, max_b, min_b])
         plt.savefig("./weekly_plot/%s 近%d週投信大戶持股變化.pdf" % (today_str, self.traced_weeks), dpi=300)
+        plt.savefig("/mnt/c/Users/cm995/Desktop/plot_data/weekly_plot/%s 近%d週投信大戶持股變化.pdf" % (today_str, self.traced_weeks), dpi=300)
 
     def run_daily_viz_foreign_inst(self):
         self.set_all_stock_list()
@@ -243,6 +246,7 @@ class simple_stock_filter:
         plt.title("外資投信持股與股價變化(製表日:%s)" % today_str)
         plt.xlabel("外資持股變化(%)")
         plt.ylabel("投信持股變化(%)")
+        cnt = 1
         for stock in self.stock_list:
             days_traced = 1
             p_inc = self.get_price_inc(stock, days_traced+1)
@@ -253,10 +257,12 @@ class simple_stock_filter:
             plot_text = self.get_plot_text(stock, p_inc)
             plt.text(f_inc, i_inc, plot_text, fontsize=8, color=(r, g, b))
             print(plot_text)
-            print("%s: %f, %f, %f" % (stock, f_inc, i_inc, p_inc))
+            print("%s: %f, %f, %f (%d of %d)" % (stock, f_inc, i_inc, p_inc, cnt, len(self.stock_list)))
+            cnt += 1
 
         plt.axis([max_f, min_f, max_b, min_b])
         plt.savefig("./daily_plot/%s外資投信持股變化.pdf" % today_str, dpi=300)
+        plt.savefig("/mnt/c/Users/cm995/Desktop/plot_data/daily_plot/%s外資投信持股變化.pdf" % today_str, dpi=300)
 
     def big_inc_over(self, level, target_percent, target_inc_percent):
         new_list = []
@@ -396,18 +402,21 @@ class simple_stock_filter:
 
     def set_all_stock_list(self):
         ss = stock_scrap("", "", "")
-        url = 'http://www.twse.com.tw/fund/T86?response=json&selectType=ALL&date=20171201'
+        url = 'http://www.twse.com.tw/fund/T86?response=json&selectType=ALL&date='
+        date_str = ss.get_date_string(ss.today)
         data_part = None
-        while(data_part is None):
+        while data_part is None:
             try:
                 html_str = ss.get_html_str(url)
                 raw_data = eval(html_str)
                 data_part = raw_data['data']
             except KeyError:
                 logging.info("retry...")
+                ss.today -= datetime.timedelta(1)
+                date_str = ss.get_date_string(ss.today)
                 pass
         all_stock_list = []
-        for stock in  data_part:
+        for stock in data_part:
             stock_id = stock[0]
             stock_name = stock[1]
             pat = re.compile('^[1-9]\d{3}$')
@@ -415,8 +424,6 @@ class simple_stock_filter:
                 all_stock_list.append(stock_id)
                 self.name_table[stock_id] = stock_name.strip()
         logging.debug("all_stock_list: %s" % str(all_stock_list))
-        for st in self.black_list:
-            all_stock_list.remove(st)
         self.stock_list = all_stock_list
 
 

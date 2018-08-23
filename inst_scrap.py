@@ -98,11 +98,14 @@ class inst_scrap(price_scrap):
                     self.total_shares[str(row[1])] = float(row[15])/10.0
 
     def cal_diff_percent(self, stock_id, diff):
-        ts = self.total_shares[stock_id]
-        if ts == 0:
+        try:
+            ts = self.total_shares[stock_id]
+            if ts == 0:
+                return 0.0
+            else:
+                return diff/ts
+        except KeyError:
             return 0.0
-        else:
-            return diff/ts
 
 
 if __name__ == "__main__":
