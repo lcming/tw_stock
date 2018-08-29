@@ -10,7 +10,7 @@ class foreign_scrap(inst_scrap):
         self.url = 'http://www.twse.com.tw/fund/MI_QFIIS?response=json&_=1515166188118&selectType=ALLBUT0999&'
 
     def set_daily_info(self, date):
-        sgt_cache_name =  "./cache/" + self.__class__.__name__ + date + ".txt"
+        sgt_cache_name =  self.cache_dir + self.__class__.__name__ + date + ".txt"
         url = self.format_url(date)
         cache_web = self.load_cache_web(sgt_cache_name)
         if cache_web:
