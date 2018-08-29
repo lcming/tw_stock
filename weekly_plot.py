@@ -4,7 +4,7 @@ import datetime
 
 if __name__ == "__main__":
     date_str = str(datetime.date.today())
-    log_name = 'weekly_.log'
+    log_name = 'weekly.log'
     logging.basicConfig(filename=log_name, level=logging.DEBUG)
     logging.debug("start...")
     volume_min = 100000

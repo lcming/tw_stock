@@ -197,12 +197,12 @@ class stock_scrap:
         sgt_cache_name =  self.cache_dir + self.__class__.__name__ + date + ".txt"
         url = self.format_url(date)
         cache_web = self.load_cache_web(sgt_cache_name)
+        null = None
         if cache_web:
             raw_data = eval(cache_web)
         else:
             try:
                 web_str = self.get_html_str(url)
-                null = None
                 raw_data = eval(web_str)
             except SyntaxError:
                 logging.debug("eval cache web syntax error, retry...")
