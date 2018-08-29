@@ -12,16 +12,21 @@ class close_scrap(foreign_scrap):
     def set_daily_info(self, date):
         sgt_cache_name =  "./cache/" + self.__class__.__name__ + date + ".txt"
         url = self.format_url(date)
-        cache_web = self.load_cache_web(sgt_cache_name, url)
-        try:
+        cache_web = self.load_cache_web(sgt_cache_name)
+        if cache_web:
             null = None
             raw_data = eval(cache_web)
-        except SyntaxError:
-            logging.debug("eval cache web syntax error, retry...")
-            self.inval_cache_web(sgt_cache_name)
-            self.set_daily_info(date)
-            return
-        stat = raw_data['stat']
+            stat = raw_data['stat']
+        else:
+            try:
+                null = None
+                web_str = self.get_html_str(url)
+                raw_data = eval(web_str)
+                stat = raw_data['stat']
+            except SyntaxError:
+                logging.debug("eval cache web syntax error, retry...")
+                raw_data = None
+                stat = None
         daily_info = {}
         if ('data5' in raw_data):
             data_part = raw_data['data5']
@@ -43,6 +48,8 @@ class close_scrap(foreign_scrap):
             logging.info("No trade on %s" % date)
             daily_info = None
 
+        if cache_web is None:
+            self.fill_cache_web(sgt_cache_name, web_str)
         self.data[date] = daily_info
 
 

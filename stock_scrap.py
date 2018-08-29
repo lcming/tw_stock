@@ -35,7 +35,7 @@ class stock_scrap:
         self.cache_name = self.cache_dir + self.__class__.__name__+ str(_stock_id) + ".txt"
 
     def _get_today(self):
-        if int(datetime.datetime.now().hour) < 18:
+        if int(datetime.datetime.now().hour) < 20:
             return datetime.date.today() - datetime.timedelta(1)
         else:
             return datetime.date.today()
@@ -105,6 +105,7 @@ class stock_scrap:
         try:
             time.sleep(5)
             req = urllib.request.Request(url, headers = {'User-Agent' : "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2227.0 Safari/537.36"})
+            logging.debug("requested URL:")
             logging.debug(url)
             rsp = urllib.request.urlopen(req)
             read_data = rsp.read()
@@ -115,7 +116,7 @@ class stock_scrap:
             html_str = self.get_html_str(url)
         return html_str
 
-    def load_cache_web(self, fname, url):
+    def load_cache_web(self, fname):
         try:
             with open(fname, 'r', encoding='utf-8') as infile:
                 cache_web = infile.read()
@@ -123,11 +124,7 @@ class stock_scrap:
                 logging.info("web cache %s hit" % fname)
         except (FileNotFoundError) as e:
             logging.info("web cache %s miss, request URL" % fname)
-            try:
-                cache_web = self.get_html_str(url)
-                self.fill_cache_web(fname, cache_web)
-            except SyntaxError:
-                cache_web = self.load_cache_web(date, url)
+            return None
         return cache_web
 
     def fill_cache_web(self, fname, cache_web):
@@ -138,7 +135,6 @@ class stock_scrap:
 
     def inval_cache_web(self, fname):
         os.remove(fname)
-
 
     def load_cache_data(self):
         try:
@@ -168,7 +164,7 @@ class stock_scrap:
 
         try:
             b2b_no_trade = 0
-            max_b2b_no_trade = 10
+            max_b2b_no_trade = 30
             while (days_traced < self.trace_len):
                 date = self.get_date_string(d)
                 if(date in self.data):
@@ -179,18 +175,19 @@ class stock_scrap:
                         b2b_no_trade = 0
                 else:
                     logging.info("Cache miss on %s" % date)
+                    self.daily_failed_cnt =0
                     self.set_daily_info(date)
-                    if(self.data[date]):
+                    if date in self.data and self.data[date]:
                         self.record_dates.append(date)
                         days_traced += 1
                         b2b_no_trade = 0
                     else:
                         self.data[date] = None
                         b2b_no_trade += 1
-                    if b2b_no_trade > max_b2b_no_trade:
-                        logging.info("give up %s" % self.stock_id)
-                        self.set_data_failed = True
-                        break
+                        if b2b_no_trade > max_b2b_no_trade:
+                            logging.info("give up %s" % self.stock_id)
+                            self.set_data_failed = True
+                            break
                 d -= datetime.timedelta(1)
         except OverflowError:
             logging.error("overflow in %s" % self.stock_id)

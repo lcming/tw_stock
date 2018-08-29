@@ -35,6 +35,7 @@ class price_scrap(stock_scrap):
             return
         for day_info in data_part:
             if(re.match('\d+/\d+/\d+', day_info[0])):
+                # try to fill everyday available from URL
                 formatted_date = self.format_date(day_info[0])
                 price = self.get_pure_float(day_info[1])
                 self.data[formatted_date] = price

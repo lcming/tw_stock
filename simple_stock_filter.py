@@ -39,6 +39,7 @@ class simple_stock_filter:
             ss.set_today(2018, 1, 5)
         ss.set_data()
         if(len(ss.record_dates) > 0):
+            print(ss.record_dates)
             sum = 0.0
             for d in ss.record_dates:
                 inc = ss.data[d]['invest_diff_percent']
@@ -57,6 +58,7 @@ class simple_stock_filter:
         if ss.set_data_failed:
             return 0.0
         if(len(ss.record_dates) > 0):
+            print(ss.record_dates)
             if len(ss.record_dates)>5:
                 rate = 5
             else:
@@ -76,11 +78,11 @@ class simple_stock_filter:
             ss.set_today(2018, 1, 5)
         ss.set_data()
         if(len(ss.record_dates) > 0):
+            print(ss.record_dates)
             if len(ss.record_dates)>5:
                 rate = 5
             else:
                 rate = 1
-            print(ss.record_dates)
             sample_dates = self.sample_list(ss.record_dates, rate)
             start_date = sample_dates[-1]
             end_date = sample_dates[0]

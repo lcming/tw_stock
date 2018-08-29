@@ -10,6 +10,8 @@ class test_dist_scrap(unittest.TestCase):
 
     def test_set_valid_dates(self):
         ds = dist_scrap("", 0)
+        ds.set_valid_dates()
+        assert(len(ds.valid_dates) > 10)
 
     def test_data_scratch(self):
         files = glob.glob('./cache_scratch/*')

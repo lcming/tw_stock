@@ -17,7 +17,6 @@ class dist_scrap(stock_scrap):
         _url = 'https://www.tdcc.com.tw/smWeb/QryStockAjax.do'
         super().__init__(_stock_id, _trace_len, _url)
         self.set_valid_dates()
-        self.retry_cnt = 0
         self.none_cnt = 0
 
     def get_min_max(self, share_range):
@@ -53,10 +52,13 @@ class dist_scrap(stock_scrap):
         try:
             headers = {
                 'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:27.0) Gecko/20100101 Firefox/27.0',
-                'Referer' : 'https://www.tdcc.com.tw/smWeb/QryStockAjax.do'}
+                #'Referer' : 'https://www.tdcc.com.tw/smWeb/QryStockAjax.do'
+                'Referer' : 'https://www.tdcc.com.tw/smWeb/QryStock.jsp'
+                }
             payload = self.parsePOSTstring(POSTstr)
             s = Session()
             r = s.post(self.url, data = payload, headers=headers)
+            logging.debug("Request %s" % self.url)
             ajax_str = r.text
             s.close()
         except exceptions.ConnectionError:
@@ -78,7 +80,8 @@ class dist_scrap(stock_scrap):
         root = etree.HTML(html_str)
         alert_msg = root.xpath('//font')
         try:
-            table_rows = root.xpath("//form/table/tr/td/table[position()=7]/tbody/tr[position()>1]")
+            data_pos = 6
+            table_rows = root.xpath("//form/table/tr/td/table[position()=%s]/tbody/tr[position()>1]" % str(data_pos))
             for row in table_rows:
                 idx = row[0].text
                 cnt += 1
@@ -99,15 +102,19 @@ class dist_scrap(stock_scrap):
             daily_info["total_owners"] = total_owners
             daily_info["total_shares"] = total_shares
             self.data[date] = daily_info
-        except (IndexError, Exception) as e:
+        except IndexError:
+            logging.debug("Dump row:")
+            for col in row:
+                logging.debug(col.text)
             logging.error(traceback.format_exc())
             logging.fatal("cannot parse the page %s" % html_str)
-            if self.retry_cnt < 10:
-                self.retry_cnt += 1
+
+        if len(daily_info) == 0:
+            max_fail_cnt = 5
+            if self.daily_failed_cnt < max_fail_cnt:
+                self.daily_failed_cnt += 1
                 self.set_daily_info(date)
         return
-
-
 
     def format_url(self, date):
         _url = self.url + '?SCA_DATE=' + date + '&SqlMethod=StockNo&StockNo=' + str(self.stock_id) + '&StockName=&sub=%ACd%B8%DF'

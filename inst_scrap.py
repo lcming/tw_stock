@@ -52,12 +52,16 @@ class inst_scrap(price_scrap):
         daily_info = {}
         sgt_cache_name =  self.cache_dir + self.__class__.__name__ + date + ".txt"
         url = self.format_url(date)
-        cache_web = self.load_cache_web(sgt_cache_name, url)
-        try:
+        cache_web = self.load_cache_web(sgt_cache_name)
+        if cache_web:
             raw_data = eval(cache_web)
-        except SyntaxError:
-            self.set_daily_info(date)
-            return
+        else:
+            try:
+                web_str = self.get_html_str(url)
+                raw_data = eval(web_str)
+            except SyntaxError:
+                logging.debug("eval cache web syntax error, retry...")
+                raw_data = None
         stat = raw_data['stat']
         if ('data' in raw_data):
             data_part = raw_data['data']
@@ -76,7 +80,7 @@ class inst_scrap(price_scrap):
             invest_diff_percent = self.cal_diff_percent(self.stock_id, daily_info['invest_diff'])
             daily_info['invest_diff_percent'] = invest_diff_percent
         elif (stat == '很抱歉，目前線上人數過多，請您稍候再試'):
-            self.inval_cache_web(sgt_cache_name)
+            #self.inval_cache_web(sgt_cache_name)
             self.set_daily_info(date)
             return
         elif (stat == '很抱歉，沒有符合條件的資料!'):
@@ -86,6 +90,8 @@ class inst_scrap(price_scrap):
             print(stat)
             logging.error("error fetching inst data with url %s" % url)
 
+        if cache_web is None:
+            self.fill_cache_web(sgt_cache_name, web_str)
         self.data[date] = daily_info
 
     def set_total_shares(self):

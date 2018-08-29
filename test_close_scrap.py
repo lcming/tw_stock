@@ -4,11 +4,10 @@ import unittest
 import logging
 
 
-class test_inst_scrap(unittest.TestCase):
+class test_close_scrap(unittest.TestCase):
     fix_year = 2017
     fix_month = 12
     fix_day = 1
-
 
     def test_set_data(self):
         inss = close_scrap("3035", 30)

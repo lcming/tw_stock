@@ -12,17 +12,18 @@ class foreign_scrap(inst_scrap):
     def set_daily_info(self, date):
         sgt_cache_name =  "./cache/" + self.__class__.__name__ + date + ".txt"
         url = self.format_url(date)
-        cache_web = self.load_cache_web(sgt_cache_name, url)
-        try:
+        cache_web = self.load_cache_web(sgt_cache_name)
+        if cache_web:
             raw_data = eval(cache_web)
-        except SyntaxError:
-            logging.debug("eval cache web syntax error, retry...")
-            self.inval_cache_web(sgt_cache_name)
-            self.set_daily_info(date)
-            return
-        stat = raw_data['stat']
+        else:
+            try:
+                web_str = self.get_html_str(url)
+                raw_data = eval(web_str)
+            except SyntaxError:
+                logging.debug("eval cache web syntax error, retry...")
+                raw_data = None
         daily_info = None
-        if ('data' in raw_data):
+        if 'data' in raw_data and len(raw_data['data']) > 100:
             data_part = raw_data['data']
             idx = self.get_stock_id_idx(data_part, self.stock_id)
             if (idx >= 0):
@@ -31,15 +32,21 @@ class foreign_scrap(inst_scrap):
             #       0          1          2            3                4              5                 6                7
                 daily_info = self.get_pure_float(data_part[idx][i])
             else:
-                logging.info("No trade on %s" % date)
-                daily_info = None
-        elif (stat == '很抱歉，目前線上人數過多，請您稍候再試'):
-            self.inval_cache_web(sgt_cache_name)
+                logging.info("cannot locate %s from %s" % (self.stock_id, url))
+        elif cache_web is None and self.daily_failed_cnt < 5:
+            # we don't trust result from internet, so retry
+            logging.info("retry %d times: %s" % (self.daily_failed_cnt, url))
+            self.daily_failed_cnt += 1
+            #self.inval_cache_web(sgt_cache_name)
             self.set_daily_info(date)
             return
         else:
-            logging.error("error fetching inst data with url %s" )
+            self.daily_failed_cnt = 0
+            logging.info("No trade on %s" % date)
+            daily_info = None
 
+        if cache_web is None:
+            self.fill_cache_web(sgt_cache_name, web_str)
         self.data[date] = daily_info
 
     def get_stock_id_idx(self, stock_array, stock_id):
