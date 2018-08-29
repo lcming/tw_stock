@@ -20,8 +20,7 @@ do
 done
 
 # test app script
-
-apps=`test_simple.py`
+apps="test_simple.py"
 for testfile in $apps
 do
     echo "run $testfile"
@@ -32,7 +31,7 @@ do
 done
 
 if [ "$fail_tests" = "" ] && [ "$commit" -eq 1 ] ; then
-    git commit -a -m "$msg"
+    #git commit -a -m "$msg"
     git push
 else
     echo "failed tests: $fail_tests"
