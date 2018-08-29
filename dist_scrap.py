@@ -66,8 +66,6 @@ class dist_scrap(stock_scrap):
             ajax_str = self.get_ajax_str(POSTstr)
         return ajax_str
 
-
-
     def set_daily_info(self, date):
         if date not in self.valid_dates:
             self.data[date] = None
@@ -78,7 +76,6 @@ class dist_scrap(stock_scrap):
         cnt = 0
         html_str = self.get_html_str(date)
         root = etree.HTML(html_str)
-        alert_msg = root.xpath('//font')
         try:
             data_pos = 6
             table_rows = root.xpath("//form/table/tr/td/table[position()=%s]/tbody/tr[position()>1]" % str(data_pos))
@@ -101,20 +98,19 @@ class dist_scrap(stock_scrap):
             daily_info["dist"] = day_dist
             daily_info["total_owners"] = total_owners
             daily_info["total_shares"] = total_shares
-            self.data[date] = daily_info
         except IndexError:
-            logging.debug("Dump row:")
+            logging.debug("Dump rows:")
             for col in row:
                 logging.debug(col.text)
             logging.error(traceback.format_exc())
             logging.fatal("cannot parse the page %s" % html_str)
 
         if len(daily_info) == 0:
-            max_fail_cnt = 5
-            if self.daily_failed_cnt < max_fail_cnt:
+            if self.daily_failed_cnt < self.max_fail_cnt:
                 self.daily_failed_cnt += 1
                 self.set_daily_info(date)
-        return
+                return
+        self.data[date] = daily_info
 
     def format_url(self, date):
         _url = self.url + '?SCA_DATE=' + date + '&SqlMethod=StockNo&StockNo=' + str(self.stock_id) + '&StockName=&sub=%ACd%B8%DF'

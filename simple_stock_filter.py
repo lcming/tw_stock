@@ -73,7 +73,7 @@ class simple_stock_filter:
             return 0.0
 
     def get_price_inc(self, stock, days_traced):
-        ss = price_scrap(str(stock), days_traced)
+        ss = close_scrap(str(stock), days_traced)
         if self.test_mode:
             ss.set_today(2018, 1, 5)
         ss.set_data()
@@ -86,7 +86,7 @@ class simple_stock_filter:
             sample_dates = self.sample_list(ss.record_dates, rate)
             start_date = sample_dates[-1]
             end_date = sample_dates[0]
-            inc = (ss.data[end_date] - ss.data[start_date]) / ss.data[start_date]
+            inc = (ss.data[end_date]['close'] - ss.data[start_date]['close']) / ss.data[start_date]['close']
             return inc*100.0
         else:
             logging.warn("No valid price data for %s" % stock)

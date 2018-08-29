@@ -9,25 +9,9 @@ class close_scrap(foreign_scrap):
         super().__init__(_stock_id, _trace_len)
         self.url = 'http://www.twse.com.tw/exchangeReport/MI_INDEX?response=json&type=ALLBUT0999&_=1516023058595&'
 
-    def set_daily_info(self, date):
-        sgt_cache_name =  self.cache_dir + self.__class__.__name__ + date + ".txt"
-        url = self.format_url(date)
-        cache_web = self.load_cache_web(sgt_cache_name)
-        if cache_web:
-            null = None
-            raw_data = eval(cache_web)
-            stat = raw_data['stat']
-        else:
-            try:
-                null = None
-                web_str = self.get_html_str(url)
-                raw_data = eval(web_str)
-                stat = raw_data['stat']
-            except SyntaxError:
-                logging.debug("eval cache web syntax error, retry...")
-                raw_data = None
-                stat = None
+    def parse_total_stock_daily_info(self, raw_data):
         daily_info = {}
+        ok = 0
         if ('data5' in raw_data):
             data_part = raw_data['data5']
             idx = self.get_stock_id_idx(data_part, self.stock_id)
@@ -40,16 +24,7 @@ class close_scrap(foreign_scrap):
                 i = 2
                 key = self.data_base_key[i]
                 daily_info[key] = self.get_pure_int(data_part[idx][i])
-        elif (stat == '很抱歉，目前線上人數過多，請您稍候再試'):
-            self.inval_cache_web(sgt_cache_name)
-            self.set_daily_info(date)
-            return
-        else:
-            logging.info("No trade on %s" % date)
-            daily_info = None
-
-        if cache_web is None:
-            self.fill_cache_web(sgt_cache_name, web_str)
-        self.data[date] = daily_info
+            ok = 1
+        return daily_info, ok
 
 

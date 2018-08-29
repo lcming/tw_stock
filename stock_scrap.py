@@ -19,7 +19,6 @@ class stock_scrap:
 
     # dbg
     scratch_mode = 0
-    hit_count = 0
 
     def __init__(self, _stock_id, _trace_len, _url):
         self.today = self._get_today()
@@ -28,6 +27,7 @@ class stock_scrap:
         self.url = _url
         self.record_dates.clear()
         self.data.clear()
+        self.max_fail_cnt = 5
         if self.scratch_mode == 1:
             self.cache_dir = "./cache_scratch/"
         else:
@@ -67,6 +67,9 @@ class stock_scrap:
     def format_url(self, date):
         assert(False)
 
+    def parse_total_stock_daily_info(self, raw_data):
+        assert(False)
+
     def get_pure_int(self, number):
         import re
         number_old = number
@@ -85,6 +88,7 @@ class stock_scrap:
         except:
             logging.warn("failed converting int %s" % number_old)
             return None
+
     def get_pure_float(self, number):
         import re
         number_old = number
@@ -97,9 +101,6 @@ class stock_scrap:
             logging.error("failed converting float %s" % number_old)
             return None
 
-
-
-    #@retry(urllib.error.URLError)
     def get_html_str(self, url):
         import time
         try:
@@ -168,7 +169,6 @@ class stock_scrap:
             while (days_traced < self.trace_len):
                 date = self.get_date_string(d)
                 if(date in self.data):
-                    self.hit_count += 1
                     if(self.data[date]):
                         self.record_dates.append(date)
                         days_traced += 1
@@ -192,6 +192,42 @@ class stock_scrap:
         except OverflowError:
             logging.error("overflow in %s" % self.stock_id)
         self.store_cache_data()
+
+    def set_daily_info(self, date):
+        sgt_cache_name =  self.cache_dir + self.__class__.__name__ + date + ".txt"
+        url = self.format_url(date)
+        cache_web = self.load_cache_web(sgt_cache_name)
+        if cache_web:
+            raw_data = eval(cache_web)
+        else:
+            try:
+                web_str = self.get_html_str(url)
+                null = None
+                raw_data = eval(web_str)
+            except SyntaxError:
+                logging.debug("eval cache web syntax error, retry...")
+                raw_data = None
+        try:
+            (daily_info, ok) = self.parse_total_stock_daily_info(raw_data)
+        except TypeError:
+            print(raw_data)
+            print(daily_info)
+        if ok:
+            logging.info("ok")
+        elif cache_web is None and self.daily_failed_cnt < self.max_fail_cnt:
+            # we don't trust result from internet, so retry
+            logging.info("retry %d times: %s" % (self.daily_failed_cnt, url))
+            self.daily_failed_cnt += 1
+            self.set_daily_info(date)
+            return
+        else:
+            self.daily_failed_cnt = 0
+            logging.info("No trade on %s" % date)
+            daily_info = None
+
+        if cache_web is None:
+            self.fill_cache_web(sgt_cache_name, web_str)
+        self.data[date] = daily_info
 
 
 

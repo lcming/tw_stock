@@ -13,7 +13,6 @@ class test_simple(unittest.TestCase):
     traced_weeks = 2
 
     def test_inc(self):
-        print("1")
         ss = simple_stock_filter()
         ss.test_mode = 1
         stock = '2330'
@@ -29,7 +28,6 @@ class test_simple(unittest.TestCase):
         self.assertAlmostEqual(i_inc, 0.0008076240)
 
     def test_set_all_stock_list(self):
-        print("2")
         ss = simple_stock_filter()
         ss.set_all_stock_list()
 

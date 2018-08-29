@@ -1,17 +1,16 @@
 #!/usr/bin/python3
 
 from lxml import etree, html
-from retry import retry
 import urllib.request
 import logging
 from pprint import pprint as pp
 import re
 import datetime
-from price_scrap import price_scrap
+from stock_scrap import stock_scrap
 import sys
 import csv
 
-class inst_scrap(price_scrap):
+class inst_scrap(stock_scrap):
     data_base_key = ['stock_id', 'name',
                      'foreign_buy', 'foreign_sell', 'foreign_diff',
                      'foreign_dealer_buy', 'foreign_dealer_sell', 'foreign_dealer_diff',
@@ -22,8 +21,8 @@ class inst_scrap(price_scrap):
     total_shares = {}
 
     def __init__(self, _stock_id, _trace_len):
-        super().__init__(_stock_id, _trace_len)
-        self.url = 'http://www.twse.com.tw/fund/T86?response=json&selectType=ALL&'
+        url = 'http://www.twse.com.tw/fund/T86?response=json&selectType=ALL&'
+        super().__init__(_stock_id, _trace_len, url)
         self.set_total_shares()
 
     def format_url(self, date):
@@ -46,24 +45,10 @@ class inst_scrap(price_scrap):
             idx = -1
         return idx
 
-
-    #TODO: retry with differnt strategy based on "很抱歉，沒有符合條件的資料!" or "幕前人數過多"
-    def set_daily_info(self, date):
+    def parse_total_stock_daily_info(self, raw_data):
         daily_info = {}
-        sgt_cache_name =  self.cache_dir + self.__class__.__name__ + date + ".txt"
-        url = self.format_url(date)
-        cache_web = self.load_cache_web(sgt_cache_name)
-        if cache_web:
-            raw_data = eval(cache_web)
-        else:
-            try:
-                web_str = self.get_html_str(url)
-                raw_data = eval(web_str)
-            except SyntaxError:
-                logging.debug("eval cache web syntax error, retry...")
-                raw_data = None
-        stat = raw_data['stat']
-        if ('data' in raw_data):
+        ok = 0
+        if 'data' in raw_data:
             data_part = raw_data['data']
             idx = self.get_stock_id_idx(data_part, self.stock_id)
             for i in range(2, len(self.data_base_key)):
@@ -79,20 +64,8 @@ class inst_scrap(price_scrap):
                     sys.exit(0)
             invest_diff_percent = self.cal_diff_percent(self.stock_id, daily_info['invest_diff'])
             daily_info['invest_diff_percent'] = invest_diff_percent
-        elif (stat == '很抱歉，目前線上人數過多，請您稍候再試'):
-            #self.inval_cache_web(sgt_cache_name)
-            self.set_daily_info(date)
-            return
-        elif (stat == '很抱歉，沒有符合條件的資料!'):
-            logging.info("No trade on %s" % date)
-            daily_info = None
-        else:
-            print(stat)
-            logging.error("error fetching inst data with url %s" % url)
-
-        if cache_web is None:
-            self.fill_cache_web(sgt_cache_name, web_str)
-        self.data[date] = daily_info
+            ok = 1
+        return daily_info, ok
 
     def set_total_shares(self):
         if len(self.total_shares) == 0:

@@ -6,7 +6,23 @@ fi
 msg=$1
 echo $msg
 fail_tests=""
-for testfile in `ls test*.py`
+
+scraps=`ls test*scrap.py`
+
+# test scrap script
+for testfile in $scraps
+do
+    echo "run $testfile"
+    python3 $testfile
+    if [ "$?" -ne 0 ]; then
+        fail_tests=$(printf "$fail_tests\n$testfile")
+    fi
+done
+
+# test app script
+
+apps=`test_simple.py`
+for testfile in $apps
 do
     echo "run $testfile"
     python3 $testfile
