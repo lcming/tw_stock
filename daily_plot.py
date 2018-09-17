@@ -10,7 +10,7 @@ if __name__ == "__main__":
     volume_min = 100000
     price_min = 5.0
     price_max = 5000.0
-    waived_list = []
+    waived_list = ['2020']
     traced_weeks = 0
     ssf = simple_stock_filter(volume_min, price_min, price_max, traced_weeks, waived_list)
     ssf.run_daily_viz_foreign_inst()

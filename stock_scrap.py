@@ -35,7 +35,7 @@ class stock_scrap:
         self.cache_name = self.cache_dir + self.__class__.__name__+ str(_stock_id) + ".txt"
 
     def _get_today(self):
-        if int(datetime.datetime.now().hour) < 20:
+        if int(datetime.datetime.now().hour) < 19:
             return datetime.date.today() - datetime.timedelta(1)
         else:
             return datetime.date.today()

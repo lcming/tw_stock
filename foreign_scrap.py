@@ -26,8 +26,8 @@ class foreign_scrap(stock_scrap):
                 #       0          1          2            3                4              5                 6                7
                     daily_info = self.get_pure_float(data_part[idx][i])
                 else:
-                    logging.info("cannot locate %s from %s" % (self.stock_id, url))
-            ok = 1
+                    logging.info("cannot locate %s from %s" % (self.stock_id, raw_data))
+                ok = 1
             return daily_info, ok
 
     def get_stock_id_idx(self, stock_array, stock_id):
