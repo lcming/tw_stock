@@ -86,8 +86,11 @@ class simple_stock_filter:
             sample_dates = self.sample_list(ss.record_dates, rate)
             start_date = sample_dates[-1]
             end_date = sample_dates[0]
-            inc = (ss.data[end_date]['close'] - ss.data[start_date]['close']) / ss.data[start_date]['close']
-            return inc*100.0
+            try:
+                inc = (ss.data[end_date]['close'] - ss.data[start_date]['close']) / ss.data[start_date]['close']
+                return inc*100.0
+            except TypeError:
+                return 0.0
         else:
             logging.warn("No valid price data for %s" % stock)
             return 0.0
@@ -184,7 +187,7 @@ class simple_stock_filter:
             max_f, min_f, max_b, min_b = self.update_bound(f_inc, b_inc, max_f, min_f, max_b, min_b)
             r, g, b = self.get_plot_color(p_inc)
             plot_text = self.get_plot_text(stock, p_inc)
-            plt.text(f_inc, b_inc, plot_text, fontsize=8, color=(r, g, b))
+            plt.text(f_inc, b_inc, plot_text, fontsize=4, color=(r, g, b))
             print(plot_text)
             print("%s: %f, %f, %f (%d of %d)" % (stock, f_inc, b_inc, p_inc, cnt, len(self.stock_list)))
             cnt += 1
@@ -221,7 +224,7 @@ class simple_stock_filter:
             max_f, min_f, max_b, min_b = self.update_bound(f_inc, b_inc, max_f, min_f, max_b, min_b)
             r, g, b = self.get_plot_color(p_inc)
             plot_text = self.get_plot_text(stock, p_inc)
-            plt.text(f_inc, b_inc, plot_text, fontsize=8, color=(r, g, b))
+            plt.text(f_inc, b_inc, plot_text, fontsize=4, color=(r, g, b))
             print(plot_text)
             print("%s: %f, %f, %f (%d of %d)" % (stock, f_inc, b_inc, p_inc, cnt, len(self.stock_list)))
             cnt += 1
@@ -257,7 +260,7 @@ class simple_stock_filter:
             max_f, min_f, max_b, min_b = self.update_bound(f_inc, i_inc, max_f, min_f, max_b, min_b)
             r, g, b = self.get_plot_color(p_inc)
             plot_text = self.get_plot_text(stock, p_inc)
-            plt.text(f_inc, i_inc, plot_text, fontsize=8, color=(r, g, b))
+            plt.text(f_inc, i_inc, plot_text, fontsize=4, color=(r, g, b))
             print(plot_text)
             print("%s: %f, %f, %f (%d of %d)" % (stock, f_inc, i_inc, p_inc, cnt, len(self.stock_list)))
             cnt += 1
