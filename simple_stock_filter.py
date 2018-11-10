@@ -2,9 +2,9 @@
 from price_scrap import price_scrap
 from dist_scrap import dist_scrap
 from inst_scrap import inst_scrap
-from stock_scrap import stock_scrap
 from foreign_scrap import foreign_scrap
 from close_scrap import close_scrap
+from stock_scrap import *
 from pprint import pformat as pf
 import datetime
 import collections
@@ -25,13 +25,16 @@ class simple_stock_filter:
     test_mode = 0
     stock_list = []
 
-    def __init__(self, volume_min = 100000, price_min = 5.0, price_max = 200.0, traced_weeks = 2, waived_list = []):
+    def __init__(self, volume_min = 500000, price_min = 5.0, price_max = 200.0, traced_weeks = 2, waived_list = []):
         self.volume_min = volume_min
         self.price_min = price_min
         self.price_max = price_max
         self.traced_weeks = traced_weeks
         self.name_table = {}
         self.waived_list = waived_list
+        self.bull = []
+        self.bear = []
+        self.lai_bear = []
 
     def get_inst_inc(self, stock, days_traced):
         ss = inst_scrap(str(stock), days_traced)
@@ -39,7 +42,7 @@ class simple_stock_filter:
             ss.set_today(2018, 1, 5)
         ss.set_data()
         if(len(ss.record_dates) > 0):
-            print(ss.record_dates)
+            #print(ss.record_dates)
             sum = 0.0
             for d in ss.record_dates:
                 inc = ss.data[d]['invest_diff_percent']
@@ -58,7 +61,7 @@ class simple_stock_filter:
         if ss.set_data_failed:
             return 0.0
         if(len(ss.record_dates) > 0):
-            print(ss.record_dates)
+            #print(ss.record_dates)
             if len(ss.record_dates)>5:
                 rate = 5
             else:
@@ -78,7 +81,7 @@ class simple_stock_filter:
             ss.set_today(2018, 1, 5)
         ss.set_data()
         if(len(ss.record_dates) > 0):
-            print(ss.record_dates)
+            #print(ss.record_dates)
             if len(ss.record_dates)>5:
                 rate = 5
             else:
@@ -165,7 +168,6 @@ class simple_stock_filter:
         if(self.test_mode):
             self.stock_list = ['2330', '2317', '2303']
         self.volume_over()
-        self.waive()
         max_b = float("-inf")
         max_f = float("-inf")
         min_b = float("inf")
@@ -202,7 +204,6 @@ class simple_stock_filter:
         if(self.test_mode):
             self.stock_list = ['2330', '2317', '2303']
         self.volume_over()
-        self.waive()
         max_b = float("-inf")
         max_f = float("-inf")
         min_b = float("inf")
@@ -239,7 +240,6 @@ class simple_stock_filter:
         if(self.test_mode):
             self.stock_list = ['2330', '2317', '2303']
         self.volume_over()
-        self.waive()
         max_b = float("-inf")
         max_f = float("-inf")
         min_b = float("inf")
@@ -430,17 +430,166 @@ class simple_stock_filter:
                 self.name_table[stock_id] = stock_name.strip()
         logging.debug("all_stock_list: %s" % str(all_stock_list))
         self.stock_list = all_stock_list
+        self.waive()
+
+    def get_avg_data(self, stock_id, days_traced, tag):
+        ss = close_scrap(str(stock_id), days_traced)
+        if(self.test_mode):
+            ss.set_today(2018, 9, 28)
+        ss.set_data()
+        acc = 0.0
+        day = 0
+        no_trade_day = 0
+        for i in reversed(sorted(ss.data)):
+            if ss.data[i]:
+                try:
+                    acc += ss.data[i][tag]
+                except TypeError:
+                    no_trade_day += 1
+                day += 1
+            if day == days_traced:
+                break
+        if day == no_trade_day:
+            raise StockTraceException("No trade")
+        return acc / (day-no_trade_day)
+
+    def scan_price_volume_breakout_bull(self, vol_inc_over_5_20_ma, price_ma_tangle_window):
+        for stock in self.stock_list:
+            try:
+                chip_ok = 0
+                price_breakout_ok = 0
+                vol_breakout_ok = 0
+                recent_price = self.get_avg_data(stock, 1, 'close')
+                recent_open = self.get_avg_data(stock, 1, 'open')
+                recent_high = self.get_avg_data(stock, 1, 'high')
+                recent_low = self.get_avg_data(stock, 1, 'low')
+                recent_vol = self.get_avg_data(stock, 1, 'deal_shares')
+                price_5ma = self.get_avg_data(stock, 5, 'close')
+                price_20ma = self.get_avg_data(stock, 20, 'close')
+                vol_5ma = self.get_avg_data(stock, 5, 'deal_shares')
+                vol_20ma = self.get_avg_data(stock, 20, 'deal_shares')
+                foreign_weekly_inc = self.get_foreign_inc(stock, 5+1)
+                inst_weekly_inc = self.get_inst_inc(stock, 5+1)
+                if foreign_weekly_inc + inst_weekly_inc > 0.0:
+                    chip_ok = 1
+                if abs(self.diff_percent(recent_price, price_5ma)) < price_ma_tangle_window and abs(self.diff_percent(price_5ma, price_20ma)) < price_ma_tangle_window:
+                    price_breakout_ok = 1
+                if self.diff_percent(recent_vol, vol_5ma) > vol_inc_over_5_20_ma and self.diff_percent(recent_vol, vol_20ma) > vol_inc_over_5_20_ma:
+                    vol_breakout_ok = 1
+                if chip_ok and price_breakout_ok and vol_breakout_ok and self.check_close_sign_bull(recent_price, recent_open, recent_high, recent_low):
+                    print("%s passed!" % stock)
+                    self.bull.append(stock)
+            except StockTraceException:
+                print("%s ignored!" % stock)
+                next;
+
+    def scan_price_volume_breakout_bear(self, vol_inc_over_5_20_ma, price_ma_tangle_window):
+        for stock in self.stock_list:
+            try:
+                chip_ok = 0
+                price_breakout_ok = 0
+                vol_breakout_ok = 0
+                recent_price = self.get_avg_data(stock, 1, 'close')
+                recent_open = self.get_avg_data(stock, 1, 'open')
+                recent_high = self.get_avg_data(stock, 1, 'high')
+                recent_low = self.get_avg_data(stock, 1, 'low')
+                recent_vol = self.get_avg_data(stock, 1, 'deal_shares')
+                price_5ma = self.get_avg_data(stock, 5, 'close')
+                price_20ma = self.get_avg_data(stock, 20, 'close')
+                vol_5ma = self.get_avg_data(stock, 5, 'deal_shares')
+                vol_20ma = self.get_avg_data(stock, 20, 'deal_shares')
+                foreign_weekly_inc = self.get_foreign_inc(stock, 5+1)
+                inst_weekly_inc = self.get_inst_inc(stock, 5+1)
+                if foreign_weekly_inc + inst_weekly_inc < 0.0:
+                    chip_ok = 1
+                if abs(self.diff_percent(recent_price, price_5ma)) < price_ma_tangle_window and abs(self.diff_percent(price_5ma, price_20ma)) < price_ma_tangle_window:
+                    price_breakout_ok = 1
+                if self.diff_percent(recent_vol, vol_5ma) > vol_inc_over_5_20_ma and self.diff_percent(recent_vol, vol_20ma) > vol_inc_over_5_20_ma:
+                    vol_breakout_ok = 1
+                if chip_ok and price_breakout_ok and vol_breakout_ok and self.check_close_sign_bear(recent_price, recent_open, recent_high, recent_low):
+                    print("%s passed!" % stock)
+                    self.bear.append(stock)
+            except StockTraceException:
+                print("%s ignored!" % stock)
+                next;
+
+    def scan_lai_bear(self, vol_inc, plunge, ma_5_20_diff, ma_20_60_diff):
+        for stock in self.stock_list:
+            try:
+                chip_ok = 0
+                price_breakout_ok = 0
+                vol_breakout_ok = 0
+                price_break_60ma = 0
+                recent_price = self.get_avg_data(stock, 1, 'close')
+                recent_open = self.get_avg_data(stock, 1, 'open')
+                recent_high = self.get_avg_data(stock, 1, 'high')
+                recent_low = self.get_avg_data(stock, 1, 'low')
+                recent_vol = self.get_avg_data(stock, 1, 'deal_shares')
+                price_5ma = self.get_avg_data(stock, 5, 'close')
+                price_20ma = self.get_avg_data(stock, 20, 'close')
+                price_60ma = self.get_avg_data(stock, 60, 'close')
+                vol_20ma = self.get_avg_data(stock, 20, 'deal_shares')
+                vol_yesterday = (self.get_avg_data(stock, 2, 'deal_shares') - 0.5 * recent_vol) * 2.0
+                price_yesterday = (self.get_avg_data(stock, 2, 'close') - 0.5 * recent_price) * 2.0
+                foreign_weekly_inc = self.get_foreign_inc(stock, 5+1)
+                inst_weekly_inc = self.get_inst_inc(stock, 5+1)
+                if foreign_weekly_inc + inst_weekly_inc < 0.0:
+                    chip_ok = 1
+                if self.diff_percent(recent_price, price_yesterday) < -plunge and abs(self.diff_percent(price_5ma, price_20ma)) < ma_5_20_diff and abs(self.diff_percent(price_20ma, price_60ma)) < ma_20_60_diff:
+                    price_breakout_ok = 1
+                if self.diff_percent(recent_vol, vol_yesterday) > vol_inc and self.diff_percent(recent_vol, vol_20ma) > vol_inc:
+                    vol_breakout_ok = 1
+                if chip_ok and price_breakout_ok and vol_breakout_ok and simple_stock_filter and self.check_close_sign_bear(recent_price, recent_open, recent_high, recent_low):
+                    print("%s passed!" % stock)
+                    self.lai_bear.append(stock)
+            except StockTraceException:
+                print("%s ignored!" % stock)
+                continue
+
+    def check_close_sign_bear(self, c, o, h, l):
+        k_body = c - o
+        up_stick = h - c
+        down_stick = c - l
+        if k_body < 0 and (abs(k_body) > down_stick or up_stick > down_stick):
+            return 1
+        else:
+            return 0
+
+    def check_close_sign_bull(self, c, o, h, l):
+        k_body = c - o
+        up_stick = h - c
+        down_stick = c - l
+        if k_body > 0 and (k_body > up_stick or down_stick > up_stick):
+            return 1
+        else:
+            return 0
+
+    def diff_percent(self, a, b):
+        return float(a-b)/b*100
 
 
 if __name__ == "__main__":
+    log_name = 'ssf.log'
     logging.basicConfig(filename='ssf.log', level=logging.DEBUG)
-    volume_min = 100000
-    price_min = 5.0
-    price_max = 5000.0
-    waived_list = ['2614', '2208']
-    for i in range(4):
-        traced_weeks = i + 1
-        ssf = simple_stock_filter(volume_min, price_min, price_max, traced_weeks, waived_list)
-        ssf.run_viz_foreign_big()
-        ssf.run_viz_inst_big()
-
+    stock_scrap.trace_bound = "20180701"
+    ssf = simple_stock_filter(volume_min = 500000)
+    ssf.set_all_stock_list()
+    ssf.volume_over()
+    ssf.scan_price_volume_breakout_bull(50.0, 5)
+    ssf.scan_price_volume_breakout_bear(50.0, 5)
+    ssf.scan_lai_bear(50.0, 3, 10, 20)
+    print("bull:")
+    print(ssf.bull)
+    print("bear:")
+    print(ssf.bear)
+    print("lai bear:")
+    print(ssf.lai_bear)
+    #volume_min = 100000
+    #price_min = 5.0
+    #price_max = 5000.0
+    #waived_list = ['2614', '2208']
+    #for i in range(4):
+    #    traced_weeks = i + 1
+    #    ssf = simple_stock_filter(volume_min, price_min, price_max, traced_weeks, waived_list)
+    #    ssf.run_viz_foreign_big()
+    #    ssf.run_viz_inst_big()

@@ -8,7 +8,14 @@ import logging
 import os
 import sys
 
+class foo:
+    pass
+
+class StockTraceException(Exception):
+    pass
+
 class stock_scrap:
+    trace_bound = "20180101"
     stock_id = None
     url = None
     trace_len = None
@@ -60,9 +67,6 @@ class stock_scrap:
         logging.debug(pf(self.record_dates))
         logging.debug("Record dates include:"),
         logging.debug(pf(self.data))
-
-    def set_daily_info(self, date):
-        assert(False)
 
     def format_url(self, date):
         assert(False)
@@ -174,7 +178,7 @@ class stock_scrap:
                         days_traced += 1
                         b2b_no_trade = 0
                 else:
-                    logging.info("Cache miss on %s" % date)
+                    logging.info("%s Cache miss on %s" % (self.stock_id, date))
                     self.daily_failed_cnt =0
                     self.set_daily_info(date)
                     if date in self.data and self.data[date]:
@@ -194,6 +198,9 @@ class stock_scrap:
         self.store_cache_data()
 
     def set_daily_info(self, date):
+        if int(date) < int(type(self).trace_bound):
+            logging.error("Exceed bound %s" % self.stock_id)
+            raise StockTraceException("Exceed bound!")
         sgt_cache_name =  self.cache_dir + self.__class__.__name__ + date + ".txt"
         url = self.format_url(date)
         cache_web = self.load_cache_web(sgt_cache_name)
@@ -210,8 +217,9 @@ class stock_scrap:
         try:
             (daily_info, ok) = self.parse_total_stock_daily_info(raw_data)
         except TypeError:
-            print(raw_data)
-            print(daily_info)
+            print("%s type error" % date)
+            #print(raw_data)
+            #print(daily_info)
         if ok:
             logging.info("ok")
         elif cache_web is None and self.daily_failed_cnt < self.max_fail_cnt:
