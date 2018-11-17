@@ -572,7 +572,8 @@ if __name__ == "__main__":
     log_name = 'ssf.log'
     logging.basicConfig(filename='ssf.log', level=logging.DEBUG)
     stock_scrap.trace_bound = "20180701"
-    ssf = simple_stock_filter(volume_min = 500000)
+    waived_list = ['2108']
+    ssf = simple_stock_filter(volume_min = 500000, waived_list=waived_list)
     ssf.set_all_stock_list()
     ssf.volume_over()
     ssf.scan_price_volume_breakout_bull(50.0, 5)
@@ -587,7 +588,6 @@ if __name__ == "__main__":
     #volume_min = 100000
     #price_min = 5.0
     #price_max = 5000.0
-    #waived_list = ['2614', '2208']
     #for i in range(4):
     #    traced_weeks = i + 1
     #    ssf = simple_stock_filter(volume_min, price_min, price_max, traced_weeks, waived_list)
