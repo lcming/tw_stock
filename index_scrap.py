@@ -53,7 +53,7 @@ class index_scrap(stock_scrap):
         except KeyError:
             logging.error("No deal info. on %s" % date)
             return
-        field = ['ask_deal', 'ask_volume', 'bid_deal', 'bid_volme', 'acc_deal', 'acc_volume', 'acc_value']
+        field = ['bid_deal', 'bid_volume', 'ask_deal', 'ask_volume', 'acc_deal', 'acc_volume', 'acc_value']
         offset = 1
         open_info = {}
         close_info = {}
