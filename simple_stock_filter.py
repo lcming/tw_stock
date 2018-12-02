@@ -459,24 +459,29 @@ class simple_stock_filter:
                 chip_ok = 0
                 price_breakout_ok = 0
                 vol_breakout_ok = 0
+                vol_ok = 0
                 recent_price = self.get_avg_data(stock, 1, 'close')
                 recent_open = self.get_avg_data(stock, 1, 'open')
                 recent_high = self.get_avg_data(stock, 1, 'high')
                 recent_low = self.get_avg_data(stock, 1, 'low')
                 recent_vol = self.get_avg_data(stock, 1, 'deal_shares')
+                prev_price = self.get_avg_data(stock, 2, 'close') * 2 - recent_price
                 price_5ma = self.get_avg_data(stock, 5, 'close')
                 price_20ma = self.get_avg_data(stock, 20, 'close')
                 vol_5ma = self.get_avg_data(stock, 5, 'deal_shares')
                 vol_20ma = self.get_avg_data(stock, 20, 'deal_shares')
                 foreign_weekly_inc = self.get_foreign_inc(stock, 5+1)
                 inst_weekly_inc = self.get_inst_inc(stock, 5+1)
+                sign_ok = self.check_close_sign_bull(prev_price, recent_price, recent_open, recent_high, recent_low)
                 if foreign_weekly_inc + inst_weekly_inc > 0.0:
                     chip_ok = 1
                 if abs(self.diff_percent(recent_price, price_5ma)) < price_ma_tangle_window and abs(self.diff_percent(price_5ma, price_20ma)) < price_ma_tangle_window:
                     price_breakout_ok = 1
                 if self.diff_percent(recent_vol, vol_5ma) > vol_inc_over_5_20_ma and self.diff_percent(recent_vol, vol_20ma) > vol_inc_over_5_20_ma:
                     vol_breakout_ok = 1
-                if chip_ok and price_breakout_ok and vol_breakout_ok and self.check_close_sign_bull(recent_price, recent_open, recent_high, recent_low):
+                if vol_20ma > 300.0:
+                    vol_ok = 1
+                if chip_ok and price_breakout_ok and vol_breakout_ok and vol_ok and sign_ok:
                     print("%s passed!" % stock)
                     self.bull.append(stock)
             except StockTraceException:
@@ -494,19 +499,23 @@ class simple_stock_filter:
                 recent_high = self.get_avg_data(stock, 1, 'high')
                 recent_low = self.get_avg_data(stock, 1, 'low')
                 recent_vol = self.get_avg_data(stock, 1, 'deal_shares')
+                prev_price = self.get_avg_data(stock, 2, 'close') * 2 - recent_price
                 price_5ma = self.get_avg_data(stock, 5, 'close')
                 price_20ma = self.get_avg_data(stock, 20, 'close')
                 vol_5ma = self.get_avg_data(stock, 5, 'deal_shares')
                 vol_20ma = self.get_avg_data(stock, 20, 'deal_shares')
                 foreign_weekly_inc = self.get_foreign_inc(stock, 5+1)
                 inst_weekly_inc = self.get_inst_inc(stock, 5+1)
+                sign_ok = self.check_close_sign_bear(prev_price, recent_price, recent_open, recent_high, recent_low)
                 if foreign_weekly_inc + inst_weekly_inc < 0.0:
                     chip_ok = 1
                 if abs(self.diff_percent(recent_price, price_5ma)) < price_ma_tangle_window and abs(self.diff_percent(price_5ma, price_20ma)) < price_ma_tangle_window:
                     price_breakout_ok = 1
                 if self.diff_percent(recent_vol, vol_5ma) > vol_inc_over_5_20_ma and self.diff_percent(recent_vol, vol_20ma) > vol_inc_over_5_20_ma:
                     vol_breakout_ok = 1
-                if chip_ok and price_breakout_ok and vol_breakout_ok and self.check_close_sign_bear(recent_price, recent_open, recent_high, recent_low):
+                if vol_20ma > 300.0:
+                    vol_ok = 1
+                if chip_ok and price_breakout_ok and vol_breakout_ok and vol_ok and sign_ok:
                     print("%s passed!" % stock)
                     self.bear.append(stock)
             except StockTraceException:
@@ -524,6 +533,7 @@ class simple_stock_filter:
                 recent_open = self.get_avg_data(stock, 1, 'open')
                 recent_high = self.get_avg_data(stock, 1, 'high')
                 recent_low = self.get_avg_data(stock, 1, 'low')
+                prev_price = self.get_avg_data(stock, 2, 'close') * 2 - recent_price
                 recent_vol = self.get_avg_data(stock, 1, 'deal_shares')
                 price_5ma = self.get_avg_data(stock, 5, 'close')
                 price_20ma = self.get_avg_data(stock, 20, 'close')
@@ -539,27 +549,29 @@ class simple_stock_filter:
                     price_breakout_ok = 1
                 if self.diff_percent(recent_vol, vol_yesterday) > vol_inc and self.diff_percent(recent_vol, vol_20ma) > vol_inc:
                     vol_breakout_ok = 1
-                if chip_ok and price_breakout_ok and vol_breakout_ok and simple_stock_filter and self.check_close_sign_bear(recent_price, recent_open, recent_high, recent_low):
+                if chip_ok and price_breakout_ok and vol_breakout_ok and simple_stock_filter and self.check_close_sign_bear(prev_price, recent_price, recent_open, recent_high, recent_low):
                     print("%s passed!" % stock)
                     self.lai_bear.append(stock)
             except StockTraceException:
                 print("%s ignored!" % stock)
                 continue
 
-    def check_close_sign_bear(self, c, o, h, l):
+    def check_close_sign_bear(self, p, c, o, h, l):
+        gain = c - p
         k_body = c - o
-        up_stick = h - c
-        down_stick = c - l
-        if k_body < 0 and (abs(k_body) > down_stick or up_stick > down_stick):
+        up_stick = abs(o - h)
+        down_stick = abs(c - l)
+        if gain < 0 and k_body < 0 and (abs(k_body) + up_stick > down_stick):
             return 1
         else:
             return 0
 
-    def check_close_sign_bull(self, c, o, h, l):
+    def check_close_sign_bull(self, p, c, o, h, l):
+        gain = c > p
         k_body = c - o
         up_stick = h - c
-        down_stick = c - l
-        if k_body > 0 and (k_body > up_stick or down_stick > up_stick):
+        down_stick = o - l
+        if k_body > 0 and gain and (k_body + down_stick > up_stick):
             return 1
         else:
             return 0

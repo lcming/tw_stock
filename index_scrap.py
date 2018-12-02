@@ -79,6 +79,6 @@ class index_scrap(stock_scrap):
 
 
 if __name__ == '__main__':
-    ps = index_scrap(300)
+    ps = index_scrap(10)
     ps.set_data()
 
