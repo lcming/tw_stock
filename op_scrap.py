@@ -12,7 +12,6 @@ class op_scrap(stock_scrap):
     def __init__(self, _trace_len):
         _url = 'http://www.taifex.com.tw/cht/3/callsAndPutsDate?queryType=1&goDay=&doQuery=1&dateaddcnt=&'
         super().__init__("_tw_index", _trace_len, _url)
-        self.url2 = "http://www.twse.com.tw/exchangeReport/MI_5MINS?"
 
     def get_last_day_of_prev_month(self, d):
         old_d = d
