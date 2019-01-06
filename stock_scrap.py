@@ -35,6 +35,7 @@ class stock_scrap:
         self.record_dates.clear()
         self.data.clear()
         self.max_fail_cnt = 5
+        self.stop_date = None
         if self.scratch_mode == 1:
             self.cache_dir = "./cache_scratch/"
         else:
@@ -160,6 +161,9 @@ class stock_scrap:
             outfile.write(str(self.data))
             outfile.close()
 
+    def set_stop_date(self, date):
+        self.stop_date = date
+
     def set_data(self):
         days_traced = 0
         d = self.today
@@ -172,6 +176,10 @@ class stock_scrap:
             max_b2b_no_trade = 30
             while (days_traced < self.trace_len):
                 date = self.get_date_string(d)
+                if self.stop_date:
+                    if self.stop_date == date:
+                        return
+
                 if(date in self.data):
                     if(self.data[date]):
                         self.record_dates.append(date)

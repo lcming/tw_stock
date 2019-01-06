@@ -10,8 +10,9 @@ if __name__ == "__main__":
     volume_min = 100000
     price_min = 5.0
     price_max = 5000.0
-    waived_list = ['2614', '2208']
-    for i in range(2):
+    waived_list = []
+    #waived_list = ['2614', '2208']
+    for i in range(1):
         traced_weeks = i + 1
         ssf = simple_stock_filter(volume_min, price_min, price_max, traced_weeks, waived_list)
         ssf.run_viz_foreign_big()
