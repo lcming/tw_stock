@@ -69,6 +69,6 @@ class op_scrap(stock_scrap):
 
 
 if __name__ == '__main__':
-    os = op_scrap(300)
+    os = op_scrap(100)
     os.set_data()
 

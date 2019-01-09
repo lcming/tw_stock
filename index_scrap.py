@@ -79,6 +79,8 @@ class index_scrap(stock_scrap):
 
 
 if __name__ == '__main__':
-    ps = index_scrap(10)
+    log_name = 'ssf.log'
+    logging.basicConfig(filename='ssf.log', level=logging.DEBUG)
+    ps = index_scrap(3)
     ps.set_data()
 

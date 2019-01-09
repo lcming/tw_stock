@@ -159,6 +159,7 @@ class stock_scrap:
         with open(self.cache_name, 'w', encoding='utf-8') as outfile:
             logging.info("store cache data")
             outfile.write(str(self.data))
+            outfile.flush()
             outfile.close()
 
     def set_stop_date(self, date):
@@ -178,6 +179,7 @@ class stock_scrap:
                 date = self.get_date_string(d)
                 if self.stop_date:
                     if self.stop_date == date:
+                        self.store_cache_data()
                         return
 
                 if(date in self.data):
@@ -201,8 +203,8 @@ class stock_scrap:
                             self.set_data_failed = True
                             break
                 d -= datetime.timedelta(1)
-        except OverflowError:
-            logging.error("overflow in %s" % self.stock_id)
+        except Exception as e:
+            print("exception in %s" % str(e))
         self.store_cache_data()
 
     def set_daily_info(self, date):

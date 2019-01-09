@@ -79,5 +79,7 @@ if __name__ == '__main__':
     #print(fs.parse_fu_table(root, 6, 1, 13))
     log_name = 'ssf.log'
     logging.basicConfig(filename='ssf.log', level=logging.DEBUG)
-    fs = fu_scrap(300)
+    last_trade_date = "20160801"
+    fs = fu_scrap(900)
+    fs.set_stop_date(last_trade_date)
     fs.set_data()

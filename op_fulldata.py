@@ -6,6 +6,7 @@
 
 import pandas as pd
 path = "/mnt/c/Users/cm995/Desktop/plot_data/tw_market/fuop_all_data.csv"
+tmp_path = "./test.csv"
 df = pd.read_csv(path, index_col=0)
 #print(df)
 
@@ -24,27 +25,32 @@ from op_close_scrap import *
 
 import datetime
 #last_trade_date = str(int(df.index[-1]))
-last_trade_date = "20170103"
+last_trade_date = "20160111"
+last_trade_date_m1 = "20160110"
 today = (datetime.date.today()-datetime.timedelta(1)).strftime('%Y%m%d')
 print(last_trade_date)
 print(today)
 
 
 # In[70]:
+trace = 900
 
-
-fs = index_scrap(600)
-#fs.set_stop_date(last_trade_date)
+print("scrap index")
+ids = index_scrap(trace)
+ids.set_stop_date(last_trade_date_m1)
+ids.set_data()
+print("scrap op")
+os = op_scrap(trace)
+os.set_stop_date(last_trade_date)
+os.set_data()
+print("scrap future")
+fs = fu_scrap(trace)
+fs.set_stop_date(last_trade_date)
 fs.set_data()
-fs = op_scrap(600)
-#fs.set_stop_date(last_trade_date)
-fs.set_data()
-fs = fu_scrap(600)
-#fs.set_stop_date(last_trade_date)
-fs.set_data()
-fs = op_close_scrap(600)
-#fs.set_stop_date(last_trade_date)
-fs.set_data()
+print("scrap op close")
+ocs = op_close_scrap(trace)
+ocs.set_stop_date(last_trade_date)
+ocs.set_data()
 
 
 # In[81]:
@@ -90,36 +96,40 @@ header = df.columns.values
 rows = []
 idxs = []
 for date in dates:
-    print(date)
-    if idx_db[date] is None:
-        print("skip %s" % date)
-        continue
-    row = []
-    #row.append(date)
-    row.append(str(idx_db[date]["open"]))
-    row.append(str(idx_db[date]["high"]))
-    row.append(str(idx_db[date]["low"]))
-    row.append(str(idx_db[date]["close"]))
-    row.append(str(idx_db[date]["close_deal"]["acc_volume"]))
-    row.append("%.2f" % (idx_db[date]["close"] - prev_close))
-    row.append(str(idx_db[date]["open_deal"]["ask_deal"]))
-    row.append(str(idx_db[date]["open_deal"]["ask_volume"]))
-    row.append(str(idx_db[date]["open_deal"]["bid_deal"]))
-    row.append(str(idx_db[date]["open_deal"]["bid_volume"]))
-    prev_close = idx_db[date]["close"]
-    row += op_db[date]["dealer call"]
-    row += op_db[date]["dealer put"]
-    row += op_db[date]["foreign call"]
-    row += op_db[date]["foreign put"]
-    row += fu_db[date]["dealer"]
-    row += fu_db[date]["foreign"]
-    row.append(str(float(op_close_db[date]["week"]["c"])+float(op_close_db[date]["week"]["p"])))
-    row.append(str(op_close_db[date]["week"]["price"]))
-    row.append(str(float(op_close_db[date]["month"]["c"])+float(op_close_db[date]["month"]["p"])))
-    row.append(str(op_close_db[date]["month"]["price"]))
-    print(row)
-    rows.append(row)
-    idxs.append(date)
+    try:
+        print(date)
+        if idx_db[date] is None:
+            print("skip %s" % date)
+            continue
+        row = []
+        #row.append(date)
+        row.append(str(idx_db[date]["open"]))
+        row.append(str(idx_db[date]["high"]))
+        row.append(str(idx_db[date]["low"]))
+        row.append(str(idx_db[date]["close"]))
+        row.append(str(idx_db[date]["close_deal"]["acc_volume"]))
+        row.append("%.2f" % (idx_db[date]["close"] - prev_close))
+        row.append(str(idx_db[date]["open_deal"]["ask_deal"]))
+        row.append(str(idx_db[date]["open_deal"]["ask_volume"]))
+        row.append(str(idx_db[date]["open_deal"]["bid_deal"]))
+        row.append(str(idx_db[date]["open_deal"]["bid_volume"]))
+        prev_close = idx_db[date]["close"]
+        row += op_db[date]["dealer call"]
+        row += op_db[date]["dealer put"]
+        row += op_db[date]["foreign call"]
+        row += op_db[date]["foreign put"]
+        row += fu_db[date]["dealer"]
+        row += fu_db[date]["foreign"]
+        row.append(str(float(op_close_db[date]["week"]["c"])+float(op_close_db[date]["week"]["p"])))
+        row.append(str(op_close_db[date]["week"]["price"]))
+        row.append(str(float(op_close_db[date]["month"]["c"])+float(op_close_db[date]["month"]["p"])))
+        row.append(str(op_close_db[date]["month"]["price"]))
+        print(row)
+        rows.append(row)
+        idxs.append(date)
+    except Exception as e:
+        import pdb
+        pdb.set_trace()
 print(idxs)
 print(rows)
 
@@ -142,4 +152,5 @@ print(new_df)
 
 
 #merged_df.to_csv(path)
+new_df.to_csv(path)
 

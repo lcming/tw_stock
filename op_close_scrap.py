@@ -134,10 +134,9 @@ class op_close_scrap(op_scrap):
 if __name__ == '__main__':
     #fs = index_scrap(200)
     #fs.set_data()
-    log_name = 'ssf.log'
-    logging.basicConfig(filename='ssf.log', level=logging.DEBUG)
-    fs = op_close_scrap(600)
-    fs.set_stop_date("20170101")
+    #log_name = 'ssf.log'
+    #logging.basicConfig(filename='ssf.log', level=logging.DEBUG)
+    fs = op_close_scrap(10)
     fs.set_data()
     #path = "sample.csv"
     #path = "error.log"
