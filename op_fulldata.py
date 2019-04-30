@@ -6,7 +6,7 @@
 
 import pandas as pd
 #path = "/mnt/c/Users/cm995/Desktop/plot_data/tw_market/fuop_all_data.csv" # modify path to current one that will be updated in place
-path = "./"
+path = "./fuop_all_data.csv"
 tmp_path = "./test.csv"
 df = pd.read_csv(path, index_col=0)
 #print(df)
